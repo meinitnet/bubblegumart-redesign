@@ -18,6 +18,15 @@ npm start
 Die Website ist dann unter `http://localhost:3000` erreichbar. Der Prozess
 laeuft unter dem angemeldeten Benutzer und benoetigt keine Root-Rechte.
 
+Fuer lokale Fehlersuche koennen zusaetzliche Server-Logs aktiviert werden:
+
+```sh
+DEBUG=1 npm start
+```
+
+Dabei werden Requests, Cache-Treffer, Instagram-Statuscodes und Laufzeiten
+ausgegeben. Zugangstokens werden nicht protokolliert.
+
 ## Instagram einrichten
 
 Der Instagram-Account muss ein Professional Account (Business oder Creator)
@@ -28,11 +37,48 @@ gesetzt:
 INSTAGRAM_USER_ID=...
 INSTAGRAM_ACCESS_TOKEN=...
 PORT=3000
+SITE_URL=https://bubblegumart.de
 MEDIA_CACHE_DIR=/home/bubblegumart/app-data/instagram
 ```
 
+`INSTAGRAM_USER_ID` muss die numerische Instagram-User-ID des Professional
+Accounts sein, nicht der Benutzername wie `tschiggys`.
+
 Der Access Token ist geheim und darf weder im Browser noch im Git-Repository
 landen. Er benoetigt mindestens die Berechtigung `instagram_business_basic`.
+
+## Eigene lokale Bilder
+
+Bilder koennen direkt in `storage/instagram/` abgelegt und in
+`storage/instagram/media.json` definiert werden. `imageUrl` ist die grosse
+lokale Version fuer die Lightbox; `thumbnailUrl` ist optional und kann auf
+eine kleinere lokale Vorschau zeigen:
+
+```json
+[
+	{
+		"id": "tattoo-01",
+		"caption": "Custom Tattoo",
+		"imageUrl": "/instagram-media/tattoo-01-large.jpg",
+		"thumbnailUrl": "/instagram-media/tattoo-01-thumb.jpg",
+		"permalink": ""
+	}
+]
+```
+
+Die Dateien `tattoo-01-large.jpg` und `tattoo-01-thumb.jpg` muessen im selben
+Ordner liegen. Ohne `thumbnailUrl` wird `imageUrl` auch fuer die Vorschau
+verwendet. Alle Galerie-Klicks oeffnen die lokale grosse Datei in der
+Lightbox. Mit `LOCAL_MEDIA_ONLY=1` in `.env` wird ausschliesslich diese lokale
+Auswahl verwendet, auch wenn Instagram-Zugangsdaten gesetzt sind.
+
+Die Weboberflaeche paginiert die geladenen Bilder automatisch: Das Instagram-
+ Raster zeigt 12 Bilder pro Seite, das Portfolio 9 Bilder pro Seite.
+Das Portfolio mischt den gesamten lokalen Bestand beim Laden zufaellig durch
+und paginiert anschliessend diese Reihenfolge.
+
+`/sitemap.xml` wird vom Server dynamisch aus dem lokalen `media.json` erzeugt
+und enthaelt neben der Startseite auch alle lokal verfuegbaren Bilder.
 
 ### Langlebigen Token erstellen
 
@@ -112,4 +158,7 @@ erforderlich.
 Neue Beitraege werden alle 15 Minuten bei Instagram abgefragt. Bilddateien
 werden beim ersten Abruf im `MEDIA_CACHE_DIR` gespeichert und danach lokal mit
 einem Browser-Cache von einem Jahr ausgeliefert. Falls Instagram nicht
-erreichbar ist, liefert der Server den zuletzt gespeicherten Feed aus.
+erreichbar ist, liefert der Server den zuletzt gespeicherten Feed aus. Der
+Server folgt bei der Instagram-Abfrage automatisch allen `paging.next`-Seiten
+und speichert jedes gefundene Bild lokal. Bei vielen Beiträgen kann der erste
+Abruf deshalb länger dauern und viel Speicherplatz benötigen.

@@ -216,7 +216,7 @@
       transition: color 0.4s;
     }
     .bw3-hero h1 .highlight {
-      color: var(--bubble-pink);
+      color: var(--bubble-mint);
       position: relative;
       display: inline-block;
     }
@@ -493,6 +493,43 @@
       font-family: 'Inter', sans-serif;
     }
     .bw3-ig-item:hover .bw3-ig-overlay { opacity: 1; }
+    .bw3-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      margin-top: 24px;
+    }
+    .bw3-pagination button {
+      min-width: 38px;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font: 500 13px 'Inter', sans-serif;
+      transition: all 0.25s;
+    }
+    .bw3-pagination button:hover:not(:disabled),
+    .bw3-pagination button.active {
+      border-color: var(--bubble-pink);
+      color: var(--bubble-pink);
+      transform: translateY(-2px);
+    }
+    .bw3-pagination button:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+    .bw3-pagination .ellipsis {
+      min-width: 24px;
+      padding: 0;
+      border-color: transparent;
+      background: transparent;
+      cursor: default;
+    }
 
     .bw3-styles-grid {
       display: grid;
@@ -746,34 +783,34 @@
 
 <div class="bw3-root" id="bw3Root">
   <nav class="bw3-nav">
-    <div class="bw3-nav-logo" onclick="scrollTo('hero')">bubblegum<span>art</span></div>
+    <div class="bw3-nav-logo" onclick="navigateTo('hero')">bubblegum<span>art</span></div>
     <ul class="bw3-nav-links">
-      <li><a onclick="scrollTo('instagram')" id="nav-instagram">Instagram</a></li>
-      <li><a onclick="scrollTo('styles')" id="nav-styles">Styles</a></li>
-      <li><a onclick="scrollTo('gallery')" id="nav-gallery">Gallery</a></li>
-      <li><a onclick="scrollTo('contact')" id="nav-contact">Kontakt</a></li>
+      <li><a onclick="navigateTo('instagram')" id="nav-instagram">Instagram</a></li>
+      <li><a onclick="navigateTo('styles')" id="nav-styles">Styles</a></li>
+      <li><a onclick="navigateTo('gallery')" id="nav-gallery">Gallery</a></li>
+      <li><a onclick="navigateTo('contact')" id="nav-contact">Kontakt</a></li>
     </ul>
     <div class="bw3-nav-right">
-      <button class="bw3-theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Light / Dark">
+      <button class="bw3-theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Light / Dark" aria-label="Dark Mode aktivieren" aria-pressed="false">
         <span id="themeIcon">&#127769;</span>
       </button>
-      <button class="bw3-nav-cta" onclick="scrollTo('contact')">Termin buchen</button>
+      <button class="bw3-nav-cta" onclick="navigateTo('contact')">Termin buchen</button>
     </div>
   </nav>
 
   <section class="bw3-hero" id="hero">
     <canvas class="bw3-hero-canvas" id="heroCanvas"></canvas>
     <div class="bw3-hero-content">
-      <h1>Tschiggys <span class="highlight">Bubblegum Art</span></h1>
-      <p>Comic, Fineline & Custom Tattoos in Hamburg Sternschanze. Individuelle Motive mit Persönlichkeit – von der ersten Idee bis zur fertigen Haut.</p>
+      <h1>Tschiggys <span class="highlight">Bubblegum Art Tattoo</span></h1>
+      <p>Comic, Sketch & Custom Tattoos in Hamburg Sternschanze/Eimsbüttel. Individuelle Motive mit Persönlichkeit – von der ersten Idee bis zur fertigen Haut.</p>
       <div class="bw3-hero-badges">
         <span class="bw3-badge">Comic Style</span>
-        <span class="bw3-badge">Fineline</span>
+        <span class="bw3-badge">Sketch</span>
         <span class="bw3-badge">Newschool</span>
         <span class="bw3-badge">Custom Design</span>
       </div>
     </div>
-    <div class="bw3-hero-scroll" onclick="scrollTo('instagram')">
+    <div class="bw3-hero-scroll" onclick="navigateTo('instagram')">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
     </div>
   </section>
@@ -781,19 +818,21 @@
   <div class="bw3-marquee">
     <div class="bw3-marquee-track">
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Comic Tattoos</span>
-      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Fineline</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Sketch</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Newschool</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Custom Designs</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Hamburg Sternschanze</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Hamburg Eimsbüttel</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>@tschiggys</span>
-      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Beckstraße 7</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Eimsbüttler Chaussee 18</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Comic Tattoos</span>
-      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Fineline</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Sketch</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Newschool</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Custom Designs</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Hamburg Sternschanze</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Hamburg Eimsbüttel</span>
       <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>@tschiggys</span>
-      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Beckstraße 7</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Eimsbüttler Chaussee 18</span>
     </div>
   </div>
 
@@ -818,6 +857,7 @@
     </div>
 
     <div class="bw3-ig-grid" id="igGrid"></div>
+    <div class="bw3-pagination" id="igPagination" aria-label="Instagram-Seiten"></div>
   </section>
 
   <section class="bw3-section" id="styles">
@@ -834,8 +874,8 @@
         <span class="bw3-style-tag">Pop-Art</span>
       </div>
       <div class="bw3-style-card" style="--accent: var(--bubble-mint); --tag-bg: rgba(78,205,196,0.12); --tag-color: #4ecdc4;">
-        <h4>Fineline</h4>
-        <p>Feine Linienführung mit filigranen Details. Elegant, zeitlos und perfekt für dezente Placements.</p>
+        <h4>Sketch</h4>
+        <p>Feine Linienführung mit sketchy Details. Elegant, zeitlos und einfach bäm</p>
         <span class="bw3-style-tag">Minimal</span>
       </div>
       <div class="bw3-style-card" style="--accent: var(--bubble-coral); --tag-bg: rgba(255,107,107,0.12); --tag-color: #ff6b6b;">
@@ -859,6 +899,7 @@
     <p class="bw3-section-sub">Eine Auswahl ausgewählter Arbeiten</p>
 
     <div class="bw3-gallery" id="galleryGrid"></div>
+    <div class="bw3-pagination" id="galleryPagination" aria-label="Portfolio-Seiten"></div>
   </section>
 
   <section class="bw3-section" id="contact">
@@ -869,13 +910,6 @@
     <p class="bw3-section-sub">Lass uns über dein nächstes Tattoo sprechen</p>
 
     <div class="bw3-contact-grid">
-      <div class="bw3-contact-card" onclick="window.open('tel:+494055899363','_blank')">
-        <div class="bw3-contact-icon" style="--icon-bg: rgba(255,143,163,0.12); --icon-color: #ff8fa3;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-        </div>
-        <h4>Telefon</h4>
-        <p>+49 40 55899363</p>
-      </div>
       <div class="bw3-contact-card" onclick="window.open('mailto:tschiggys@bubblegumart.de','_blank')">
         <div class="bw3-contact-icon" style="--icon-bg: rgba(78,205,196,0.12); --icon-color: #4ecdc4;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -894,11 +928,10 @@
   </section>
 
   <footer class="bw3-footer">
-    <p>&#169; 2025 Tschiggys Bubblegum Art Tattoo · Beckstraße 7, 20357 Hamburg</p>
-    <p style="margin-top:4px; opacity:0.6;">Redesign-Konzept – nicht die Live-Website</p>
+    <p>&#169; 2025 Tschiggys Bubblegum Art Tattoo · Eimsbüttler Chaussee 18, 20259 Hamburg</p>
   </footer>
 
-  <div class="bw3-lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="bw3-lightbox" id="lightbox" onclick="closeLightbox()" aria-hidden="true">
     <button class="bw3-lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&#215;</button>
     <img id="lightboxImg" src="" alt="">
   </div>
@@ -910,13 +943,17 @@
     isDark = !isDark;
     const root = document.getElementById('bw3Root');
     const icon = document.getElementById('themeIcon');
+    const toggle = document.getElementById('themeToggle');
     if (isDark) {
       root.setAttribute('data-theme', 'dark');
-      icon.textContent = '&#9728;️';
+      icon.textContent = '☀';
+      toggle.setAttribute('aria-label', 'Light Mode aktivieren');
     } else {
       root.removeAttribute('data-theme');
-      icon.textContent = '&#127769;';
+      icon.textContent = '🌙';
+      toggle.setAttribute('aria-label', 'Dark Mode aktivieren');
     }
+    toggle.setAttribute('aria-pressed', String(isDark));
   }
 
   const canvas = document.getElementById('heroCanvas');
@@ -932,12 +969,28 @@
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  canvas.addEventListener('mousemove', (e) => {
+  canvas.addEventListener('pointermove', (e) => {
     const rect = canvas.getBoundingClientRect();
     mouse.x = e.clientX - rect.left;
     mouse.y = e.clientY - rect.top;
   });
-  canvas.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+  canvas.addEventListener('pointerleave', () => { mouse.x = null; mouse.y = null; });
+  canvas.addEventListener('pointerdown', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    for (let index = bubbles.length - 1; index >= 0; index--) {
+      const bubble = bubbles[index];
+      const parallaxFactor = [0.15, 0.35, 0.6][bubble.layer];
+      const visibleY = bubble.y - scrollY * parallaxFactor;
+      const distance = Math.hypot(bubble.x - clickX, visibleY - clickY);
+      if (distance <= bubble.size) {
+        popBubble(bubble, index);
+        break;
+      }
+    }
+  });
 
   window.addEventListener('scroll', () => {
     scrollY = window.scrollY;
@@ -998,8 +1051,9 @@
         const dist = Math.sqrt(dx*dx + dy*dy);
         if (dist < 150) {
           const force = (150 - dist) / 150;
-          this.x += dx * force * 0.015;
-          this.y += dy * force * 0.015;
+          this.x += dx * force * 0.08;
+          this.y += dy * force * 0.04;
+          this.size = this.baseSize * (1 + force * 0.18);
         }
       }
 
@@ -1069,6 +1123,46 @@
     }
   }
 
+  const popEffects = [];
+
+  function popBubble(bubble, index) {
+    bubbles.splice(index, 1);
+    const parallaxFactor = [0.15, 0.35, 0.6][bubble.layer];
+    const visibleY = bubble.y - scrollY * parallaxFactor;
+    for (let particle = 0; particle < 12; particle++) {
+      const angle = (Math.PI * 2 * particle) / 12;
+      popEffects.push({
+        x: bubble.x,
+        y: visibleY,
+        velocityX: Math.cos(angle) * (1.2 + Math.random() * 2),
+        velocityY: Math.sin(angle) * (1.2 + Math.random() * 2),
+        color: bubble.color,
+        life: 1,
+      });
+    }
+    setTimeout(() => {
+      bubble.reset(false);
+      bubbles.push(bubble);
+    }, 450);
+  }
+
+  function drawPopEffects() {
+    popEffects.forEach((effect) => {
+      effect.x += effect.velocityX;
+      effect.y += effect.velocityY;
+      effect.velocityY += 0.04;
+      effect.life -= 0.035;
+      const { r, g, b } = effect.color;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${r},${g},${b},${Math.max(effect.life, 0)})`;
+      ctx.fill();
+    });
+    for (let index = popEffects.length - 1; index >= 0; index--) {
+      if (popEffects[index].life <= 0) popEffects.splice(index, 1);
+    }
+  }
+
   for (let layer = 0; layer < 3; layer++) {
     const count = layer === 0 ? 12 : layer === 1 ? 8 : 5;
     for (let i = 0; i < count; i++) {
@@ -1079,26 +1173,55 @@
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     bubbles.forEach(b => { b.update(); b.draw(); });
+    drawPopEffects();
     requestAnimationFrame(animate);
   }
   animate();
 
   const igGrid = document.getElementById('igGrid');
   const galleryGrid = document.getElementById('galleryGrid');
+  const igPagination = document.getElementById('igPagination');
+  const galleryPagination = document.getElementById('galleryPagination');
+  let currentMedia = [];
+  let portfolioMedia = [];
+  let instagramPage = 1;
+  let galleryPage = 1;
+  const instagramPageSize = 12;
+  const galleryPageSize = 9;
 
   function renderInstagramMedia(media) {
+    currentMedia = media;
+    portfolioMedia = shuffleMedia(media);
+    instagramPage = 1;
+    galleryPage = 1;
+    renderMediaPages();
+  }
+
+  function shuffleMedia(media) {
+    const shuffled = [...media];
+    for (let index = shuffled.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+    return shuffled;
+  }
+
+  function renderMediaPages() {
     igGrid.replaceChildren();
     galleryGrid.replaceChildren();
 
-    media.slice(0, 9).forEach((img, i) => {
+    const instagramStart = (instagramPage - 1) * instagramPageSize;
+    currentMedia.slice(instagramStart, instagramStart + instagramPageSize).forEach((img, i) => {
       const div = document.createElement('a');
       div.className = 'bw3-ig-item';
       div.style.transitionDelay = (i * 0.06) + 's';
-      div.href = img.permalink;
-      div.target = '_blank';
-      div.rel = 'noopener noreferrer';
+      div.href = img.imageUrl;
+      div.addEventListener('click', (event) => {
+        event.preventDefault();
+        openLightbox(img.imageUrl, img.caption);
+      });
       div.innerHTML = `
-        <img src="${img.imageUrl}" alt="${img.caption}" loading="lazy">
+        <img src="${img.thumbnailUrl || img.imageUrl}" alt="${img.caption}" loading="lazy">
         <div class="bw3-ig-overlay">
           <span>&#9829; ${img.likes}</span>
           <span>&#128172; ${img.comments}</span>
@@ -1107,21 +1230,85 @@
       igGrid.appendChild(div);
     });
 
-    media.slice(0, 6).forEach((img, i) => {
+    const galleryStart = (galleryPage - 1) * galleryPageSize;
+    portfolioMedia.slice(galleryStart, galleryStart + galleryPageSize).forEach((img, i) => {
       const div = document.createElement('a');
       div.className = 'bw3-gallery-item ' + (i === 1 ? 'tall' : i === 3 ? 'wide' : '');
       div.style.transitionDelay = (i * 0.1) + 's';
-      div.href = img.permalink;
-      div.target = '_blank';
-      div.rel = 'noopener noreferrer';
+      div.href = img.imageUrl;
+      div.addEventListener('click', (event) => {
+        event.preventDefault();
+        openLightbox(img.imageUrl, img.caption);
+      });
       div.innerHTML = `
-        <img src="${img.imageUrl}" alt="${img.caption}" loading="lazy">
+        <img src="${img.thumbnailUrl || img.imageUrl}" alt="${img.caption}" loading="lazy">
         <div class="bw3-gallery-caption">${img.caption}</div>
       `;
       galleryGrid.appendChild(div);
     });
 
     document.querySelectorAll('.bw3-ig-item, .bw3-gallery-item').forEach((element) => revealObserver.observe(element));
+    renderPagination(igPagination, currentMedia.length, instagramPageSize, instagramPage, (page) => {
+      instagramPage = page;
+      renderMediaPages();
+    });
+    renderPagination(galleryPagination, portfolioMedia.length, galleryPageSize, galleryPage, (page) => {
+      galleryPage = page;
+      renderMediaPages();
+    });
+  }
+
+  function renderPagination(container, itemCount, pageSize, currentPage, onPageChange) {
+    container.replaceChildren();
+    const pageCount = Math.ceil(itemCount / pageSize);
+    if (pageCount <= 1) return;
+
+    const previous = document.createElement('button');
+    previous.type = 'button';
+    previous.textContent = '‹';
+    previous.setAttribute('aria-label', 'Vorherige Seite');
+    previous.title = 'Vorherige Seite';
+    previous.disabled = currentPage === 1;
+    previous.addEventListener('click', () => onPageChange(currentPage - 1));
+    container.appendChild(previous);
+
+    const visiblePages = getVisiblePages(pageCount, currentPage);
+    visiblePages.forEach((page) => {
+      if (page === null) {
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'ellipsis';
+        ellipsis.textContent = '…';
+        ellipsis.setAttribute('aria-hidden', 'true');
+        container.appendChild(ellipsis);
+        return;
+      }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = String(page);
+      button.classList.toggle('active', page === currentPage);
+      button.setAttribute('aria-label', `Seite ${page}`);
+      button.setAttribute('aria-current', page === currentPage ? 'page' : 'false');
+      button.addEventListener('click', () => onPageChange(page));
+      container.appendChild(button);
+    });
+
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.textContent = '›';
+    next.setAttribute('aria-label', 'Nächste Seite');
+    next.title = 'Nächste Seite';
+    next.disabled = currentPage === pageCount;
+    next.addEventListener('click', () => onPageChange(currentPage + 1));
+    container.appendChild(next);
+  }
+
+  function getVisiblePages(pageCount, currentPage) {
+    if (pageCount <= 5) {
+      return Array.from({ length: pageCount }, (_, index) => index + 1);
+    }
+    if (currentPage <= 3) return [1, 2, 3, null, pageCount];
+    if (currentPage >= pageCount - 2) return [1, null, pageCount - 2, pageCount - 1, pageCount];
+    return [1, null, currentPage, null, pageCount];
   }
 
   async function loadInstagramMedia() {
@@ -1136,15 +1323,26 @@
     }
   }
 
-  function openLightbox(src) {
-    document.getElementById('lightboxImg').src = src;
-    document.getElementById('lightbox').classList.add('active');
+  function openLightbox(src, alt = '') {
+    const lightbox = document.getElementById('lightbox');
+    const image = document.getElementById('lightboxImg');
+    image.src = src;
+    image.alt = alt;
+    lightbox.classList.add('active');
+    lightbox.setAttribute('aria-hidden', 'false');
   }
   function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('active');
+    const lightbox = document.getElementById('lightbox');
+    lightbox.classList.remove('active');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.getElementById('lightboxImg').removeAttribute('src');
   }
 
-  function scrollTo(id) {
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeLightbox();
+  });
+
+  function navigateTo(id) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
