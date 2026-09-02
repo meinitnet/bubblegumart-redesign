@@ -144,9 +144,7 @@ WantedBy=default.target
 Danach im Benutzerkonto ausfuehren:
 
 ```sh
-systemctl --user daemon-reload
-systemctl --user enable --now bubblegumart.service
-systemctl --user status bubblegumart.service
+[Uniconst galleryPageSize = 12;
 ```
 
 Damit der User-Dienst auch ohne angemeldete Sitzung weiterlaeuft, ist auf dem

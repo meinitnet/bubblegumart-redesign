@@ -244,6 +244,18 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (requestUrl.pathname === '/sitemapindex.xml') {
+    response.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+    response.end(`<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <sitemap>\n    <loc>${escapeXml(`${siteUrl}/sitemap.xml`)}</loc>\n  </sitemap>\n</sitemapindex>\n`);
+    return;
+  }
+
+  if (requestUrl.pathname === '/robots.txt') {
+    response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+    response.end(`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${siteUrl}/sitemapindex.xml\n`);
+    return;
+  }
+
   if (requestUrl.pathname.startsWith('/instagram-media/')) {
     const filename = path.basename(requestUrl.pathname);
     const filePath = path.join(mediaDirectory, filename);
