@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tschiggys Bubblegum Art Tattoo Hamburg</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lobster&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base: #fdfbf7;
+      --bg-elevated: #ffffff;
+      --bg-hero: linear-gradient(180deg, #fdfbf7 0%, #fff8f0 40%, #fdfbf7 100%);
+      --text-primary: #2d2d3a;
+      --text-secondary: #7a7a8a;
+      --text-muted: #9a9aaa;
+      --border: rgba(0,0,0,0.06);
+      --shadow: rgba(0,0,0,0.08);
+      --overlay: rgba(0,0,0,0.88);
+      --badge-bg: rgba(255,255,255,0.8);
+      --ig-overlay: rgba(0,0,0,0.4);
+      --gallery-gradient: linear-gradient(transparent, rgba(0,0,0,0.55));
+      --lb-close-bg: rgba(255,255,255,0.15);
+      --lb-close-border: rgba(255,255,255,0.25);
+      --lb-close-hover: rgba(255,255,255,0.3);
+      --bubble-pink: #ff8fa3;
+      --bubble-coral: #ff6b6b;
+      --bubble-mint: #4ecdc4;
+      --bubble-lavender: #c084fc;
+      --bubble-gold: #ffd93d;
+      --bubble-sky: #74c0fc;
+      --nav-bg: rgba(253, 251, 247, 0.88);
+      --marquee-bg: #ffffff;
+      --footer-bg: #ffffff;
+      --footer-text: #b0b0c0;
+      --scroll-icon: #aaa;
+    }
+
+    [data-theme="dark"] {
+      --bg-base: #1a1a2e;
+      --bg-elevated: #252540;
+      --bg-hero: linear-gradient(180deg, #1a1a2e 0%, #252540 40%, #1a1a2e 100%);
+      --text-primary: #f0f0f5;
+      --text-secondary: #a0a0b8;
+      --text-muted: #7a7a9a;
+      --border: rgba(255,255,255,0.08);
+      --shadow: rgba(0,0,0,0.3);
+      --overlay: rgba(0,0,0,0.92);
+      --badge-bg: rgba(255,255,255,0.06);
+      --ig-overlay: rgba(0,0,0,0.5);
+      --gallery-gradient: linear-gradient(transparent, rgba(0,0,0,0.7));
+      --lb-close-bg: rgba(255,255,255,0.1);
+      --lb-close-border: rgba(255,255,255,0.2);
+      --lb-close-hover: rgba(255,255,255,0.2);
+      --bubble-pink: #ff6b9d;
+      --bubble-coral: #ff5252;
+      --bubble-mint: #3dd4c5;
+      --bubble-lavender: #b76cf7;
+      --bubble-gold: #ffd43b;
+      --bubble-sky: #5db8ff;
+      --nav-bg: rgba(26, 26, 46, 0.88);
+      --marquee-bg: #252540;
+      --footer-bg: #252540;
+      --footer-text: #6b6b8a;
+      --scroll-icon: #6b6b8a;
+    }
+
+    .bw3-root {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      width: 100%;
+      background: var(--bg-base);
+      transition: background 0.4s, color 0.4s;
+    }
+
+    .bw3-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      animation: slideDown 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: background 0.4s, border-color 0.4s;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .bw3-nav-logo {
+      font-family: 'Lobster', cursive;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: transform 0.3s, color 0.4s;
+      letter-spacing: 0.5px;
+    }
+    .bw3-nav-logo:hover { transform: scale(1.05) rotate(-2deg); }
+    .bw3-nav-logo span { color: var(--bubble-pink); }
+    .bw3-nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .bw3-nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+      padding: 4px 0;
+      font-family: 'Inter', sans-serif;
+    }
+    .bw3-nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      width: 0;
+      height: 2.5px;
+      background: var(--bubble-pink);
+      border-radius: 3px;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform: translateX(-50%);
+    }
+    .bw3-nav-links a:hover, .bw3-nav-links a.active { color: var(--text-primary); }
+    .bw3-nav-links a:hover::after, .bw3-nav-links a.active::after { width: 100%; }
+    .bw3-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .bw3-theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      font-size: 18px;
+    }
+    .bw3-theme-toggle:hover {
+      transform: scale(1.1) rotate(15deg);
+      border-color: var(--bubble-pink);
+    }
+    .bw3-nav-cta {
+      background: var(--text-primary);
+      color: var(--bg-base);
+      border: none;
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .bw3-nav-cta:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 10px 30px rgba(255, 143, 163, 0.25);
+      background: var(--bubble-pink);
+      color: #fff;
+    }
+    @media (max-width: 640px) {
+      .bw3-nav-links { display: none; }
+      .bw3-nav { padding: 14px 16px; }
+    }
+
+    .bw3-hero {
+      position: relative;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 80px;
+      overflow: hidden;
+      background: var(--bg-hero);
+      transition: background 0.4s;
+    }
+    .bw3-hero-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: all;
+      z-index: 1;
+    }
+    .bw3-hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 720px;
+    }
+    .bw3-hero h1 {
+      font-size: 68px;
+      font-weight: 400;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      animation: fadeUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+      font-family: 'Lobster', cursive;
+      color: var(--text-primary);
+      text-shadow: 2px 3px 0px rgba(255, 143, 163, 0.2), 4px 6px 0px rgba(192, 132, 252, 0.1);
+      letter-spacing: 1px;
+      transition: color 0.4s;
+    }
+    .bw3-hero h1 .highlight {
+      color: var(--bubble-pink);
+      position: relative;
+      display: inline-block;
+    }
+    .bw3-hero h1 .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: 6px;
+      left: -6px;
+      right: -6px;
+      height: 14px;
+      background: linear-gradient(135deg, var(--bubble-pink), var(--bubble-lavender));
+      opacity: 0.18;
+      border-radius: 10px;
+      animation: underlineWiggle 1.2s ease-out 1s both;
+      transform-origin: left;
+    }
+    @keyframes underlineWiggle {
+      0% { transform: scaleX(0) rotate(-2deg); }
+      60% { transform: scaleX(1) rotate(1deg); }
+      100% { transform: scaleX(1) rotate(0deg); }
+    }
+    .bw3-hero p {
+      font-size: 17px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 36px;
+      animation: fadeUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      transition: color 0.4s;
+    }
+    .bw3-hero-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
+    }
+    .bw3-badge {
+      padding: 8px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1.5px solid var(--border);
+      background: var(--badge-bg);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-secondary);
+      backdrop-filter: blur(4px);
+    }
+    .bw3-badge:hover {
+      border-color: var(--bubble-pink);
+      color: var(--bubble-pink);
+      transform: translateY(-4px) rotate(-1deg);
+      box-shadow: 0 8px 24px rgba(255, 143, 163, 0.12);
+    }
+    .bw3-hero-scroll {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounceSoft 2.5s infinite;
+      cursor: pointer;
+      z-index: 2;
+      opacity: 0.5;
+      transition: opacity 0.3s;
+    }
+    .bw3-hero-scroll:hover { opacity: 1; }
+    .bw3-hero-scroll svg { stroke: var(--scroll-icon); transition: stroke 0.4s; }
+    @keyframes bounceSoft {
+      0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+      40% { transform: translateX(-50%) translateY(-12px); }
+      60% { transform: translateX(-50%) translateY(-6px); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 640px) {
+      .bw3-hero h1 { font-size: 44px; }
+      .bw3-hero { min-height: 480px; padding: 70px 20px 60px; }
+    }
+
+    .bw3-marquee {
+      overflow: hidden;
+      padding: 22px 0;
+      background: var(--marquee-bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 40px 0;
+      transition: background 0.4s, border-color 0.4s;
+    }
+    .bw3-marquee-track {
+      display: flex;
+      gap: 48px;
+      animation: marquee 25s linear infinite;
+      width: max-content;
+    }
+    .bw3-marquee-track:hover { animation-play-state: paused; }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    .bw3-marquee-item {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-marquee-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--bubble-pink);
+      flex-shrink: 0;
+      animation: dotPulse 2s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    .bw3-section {
+      padding: 72px 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .bw3-section-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.5px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      transition: color 0.4s;
+    }
+    .bw3-section-sub {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      font-weight: 400;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+
+    .bw3-ig-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 28px;
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      box-shadow: 0 4px 20px var(--shadow);
+      animation: fadeUp 0.7s ease-out both;
+      transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+    }
+    .bw3-ig-avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--bubble-pink);
+      padding: 3px;
+      background: var(--bg-base);
+      animation: avatarPulse 2.5s ease-in-out infinite;
+      transition: background 0.4s;
+    }
+    @keyframes avatarPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 143, 163, 0.35); }
+      50% { box-shadow: 0 0 0 12px rgba(255, 143, 163, 0); }
+    }
+    .bw3-ig-info h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-ig-info p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-ig-stats {
+      display: flex;
+      gap: 28px;
+      margin-left: auto;
+    }
+    .bw3-ig-stat { text-align: center; animation: countUp 0.8s ease-out both; }
+    .bw3-ig-stat:nth-child(1) { animation-delay: 0.1s; }
+    .bw3-ig-stat:nth-child(2) { animation-delay: 0.2s; }
+    .bw3-ig-stat:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .bw3-ig-stat strong {
+      display: block;
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-ig-stat span {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+
+    .bw3-ig-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .bw3-ig-item {
+      aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      opacity: 0;
+      transform: scale(0.85) rotate(-2deg);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: var(--bg-elevated);
+    }
+    .bw3-ig-item.visible {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    .bw3-ig-item:hover {
+      transform: scale(1.05) rotate(1deg);
+      z-index: 5;
+      box-shadow: 0 16px 40px var(--shadow);
+    }
+    .bw3-ig-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s;
+      display: block;
+    }
+    .bw3-ig-item:hover img { transform: scale(1.15); }
+    .bw3-ig-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--ig-overlay);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      opacity: 0;
+      transition: opacity 0.35s;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+    }
+    .bw3-ig-item:hover .bw3-ig-overlay { opacity: 1; }
+
+    .bw3-styles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .bw3-style-card {
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(40px) rotateX(8deg);
+      perspective: 800px;
+    }
+    .bw3-style-card.visible {
+      opacity: 1;
+      transform: translateY(0) rotateX(0);
+    }
+    .bw3-style-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent, var(--text-primary));
+      transform: scaleX(0);
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border-radius: 0 0 4px 4px;
+    }
+    .bw3-style-card:hover::before { transform: scaleX(1); }
+    .bw3-style-card:hover {
+      transform: translateY(-8px) rotate(-1deg);
+      box-shadow: 0 20px 50px var(--shadow);
+    }
+    .bw3-style-card h4 {
+      font-size: 19px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-style-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-style-tag {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--tag-bg, rgba(45,45,58,0.06));
+      color: var(--tag-color, var(--text-primary));
+      transition: all 0.3s;
+      font-family: 'Inter', sans-serif;
+    }
+    .bw3-style-card:hover .bw3-style-tag { transform: scale(1.08) rotate(-1deg); }
+
+    .bw3-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .bw3-gallery-item {
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+      transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: var(--bg-elevated);
+    }
+    .bw3-gallery-item.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .bw3-gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s, filter 0.4s;
+      display: block;
+    }
+    .bw3-gallery-item:hover img {
+      transform: scale(1.1);
+      filter: brightness(1.08);
+    }
+    .bw3-gallery-item.wide { grid-column: span 2; }
+    .bw3-gallery-item.tall { grid-row: span 2; }
+    .bw3-gallery-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 18px;
+      background: var(--gallery-gradient);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-family: 'Inter', sans-serif;
+    }
+    .bw3-gallery-item:hover .bw3-gallery-caption { transform: translateY(0); }
+
+    .bw3-contact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .bw3-contact-card {
+      padding: 32px 24px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      text-align: center;
+      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(25px);
+    }
+    .bw3-contact-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .bw3-contact-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 20px 50px var(--shadow);
+      border-color: var(--bubble-pink);
+    }
+    .bw3-contact-icon {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--icon-bg, rgba(255, 143, 163, 0.1));
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .bw3-contact-card:hover .bw3-contact-icon {
+      transform: scale(1.15) rotate(-8deg);
+    }
+    .bw3-contact-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--icon-color, var(--bubble-pink));
+    }
+    .bw3-contact-card h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+    .bw3-contact-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      transition: color 0.4s;
+    }
+
+    .bw3-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: var(--overlay);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .bw3-lightbox.active {
+      display: flex;
+      opacity: 1;
+    }
+    .bw3-lightbox img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 20px;
+      object-fit: contain;
+      transform: scale(0.7) rotate(-5deg);
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+    .bw3-lightbox.active img {
+      transform: scale(1) rotate(0deg);
+    }
+    .bw3-lightbox-close {
+      position: absolute;
+      top: 28px;
+      right: 28px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--lb-close-bg);
+      border: 1px solid var(--lb-close-border);
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    .bw3-lightbox-close:hover {
+      background: var(--lb-close-hover);
+      transform: rotate(90deg) scale(1.1);
+    }
+
+    .bw3-footer {
+      text-align: center;
+      padding: 44px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--footer-text);
+      background: var(--footer-bg);
+      font-family: 'Inter', sans-serif;
+      transition: background 0.4s, color 0.4s, border-color 0.4s;
+    }
+
+    @media (max-width: 640px) {
+      .bw3-ig-grid { grid-template-columns: repeat(2, 1fr); }
+      .bw3-gallery { grid-template-columns: repeat(2, 1fr); }
+      .bw3-contact-grid { grid-template-columns: 1fr; }
+      .bw3-styles-grid { grid-template-columns: 1fr; }
+      .bw3-hero h1 { font-size: 40px; }
+      .bw3-section { padding: 48px 16px; }
+      .bw3-ig-stats { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bw3-root" id="bw3Root">
+  <nav class="bw3-nav">
+    <div class="bw3-nav-logo" onclick="scrollTo('hero')">bubblegum<span>art</span></div>
+    <ul class="bw3-nav-links">
+      <li><a onclick="scrollTo('instagram')" id="nav-instagram">Instagram</a></li>
+      <li><a onclick="scrollTo('styles')" id="nav-styles">Styles</a></li>
+      <li><a onclick="scrollTo('gallery')" id="nav-gallery">Gallery</a></li>
+      <li><a onclick="scrollTo('contact')" id="nav-contact">Kontakt</a></li>
+    </ul>
+    <div class="bw3-nav-right">
+      <button class="bw3-theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Light / Dark">
+        <span id="themeIcon">&#127769;</span>
+      </button>
+      <button class="bw3-nav-cta" onclick="scrollTo('contact')">Termin buchen</button>
+    </div>
+  </nav>
+
+  <section class="bw3-hero" id="hero">
+    <canvas class="bw3-hero-canvas" id="heroCanvas"></canvas>
+    <div class="bw3-hero-content">
+      <h1>Tschiggys <span class="highlight">Bubblegum Art</span></h1>
+      <p>Comic, Fineline & Custom Tattoos in Hamburg Sternschanze. Individuelle Motive mit Persönlichkeit – von der ersten Idee bis zur fertigen Haut.</p>
+      <div class="bw3-hero-badges">
+        <span class="bw3-badge">Comic Style</span>
+        <span class="bw3-badge">Fineline</span>
+        <span class="bw3-badge">Newschool</span>
+        <span class="bw3-badge">Custom Design</span>
+      </div>
+    </div>
+    <div class="bw3-hero-scroll" onclick="scrollTo('instagram')">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+    </div>
+  </section>
+
+  <div class="bw3-marquee">
+    <div class="bw3-marquee-track">
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Comic Tattoos</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Fineline</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Newschool</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Custom Designs</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Hamburg Sternschanze</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>@tschiggys</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Beckstraße 7</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Comic Tattoos</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Fineline</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Newschool</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Custom Designs</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Hamburg Sternschanze</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>@tschiggys</span>
+      <span class="bw3-marquee-item"><span class="bw3-marquee-dot"></span>Beckstraße 7</span>
+    </div>
+  </div>
+
+  <section class="bw3-section" id="instagram">
+    <div class="bw3-section-title">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+      Neueste Arbeiten
+    </div>
+    <p class="bw3-section-sub">Frisch aus dem Studio – direkt von @tschiggys</p>
+
+    <div class="bw3-ig-header">
+      <img class="bw3-ig-avatar" src="https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp" alt="Tschiggy">
+      <div class="bw3-ig-info">
+        <h3>tschiggys</h3>
+        <p>Bubblegum Art Tattoo · Hamburg</p>
+      </div>
+      <div class="bw3-ig-stats">
+        <div class="bw3-ig-stat"><strong>487</strong><span>Posts</span></div>
+        <div class="bw3-ig-stat"><strong>12.3k</strong><span>Follower</span></div>
+        <div class="bw3-ig-stat"><strong>892</strong><span>Following</span></div>
+      </div>
+    </div>
+
+    <div class="bw3-ig-grid" id="igGrid"></div>
+  </section>
+
+  <section class="bw3-section" id="styles">
+    <div class="bw3-section-title">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Tattoo Styles
+    </div>
+    <p class="bw3-section-sub">Jeder Style erzählt eine andere Geschichte</p>
+
+    <div class="bw3-styles-grid">
+      <div class="bw3-style-card" style="--accent: var(--bubble-pink); --tag-bg: rgba(255,143,163,0.12); --tag-color: #ff8fa3;">
+        <h4>Comic & Cartoon</h4>
+        <p>Bunte, ausdrucksstarke Motive im typischen Comic-Stil. Von Disney-Figuren bis zu eigenen Charakteren.</p>
+        <span class="bw3-style-tag">Pop-Art</span>
+      </div>
+      <div class="bw3-style-card" style="--accent: var(--bubble-mint); --tag-bg: rgba(78,205,196,0.12); --tag-color: #4ecdc4;">
+        <h4>Fineline</h4>
+        <p>Feine Linienführung mit filigranen Details. Elegant, zeitlos und perfekt für dezente Placements.</p>
+        <span class="bw3-style-tag">Minimal</span>
+      </div>
+      <div class="bw3-style-card" style="--accent: var(--bubble-coral); --tag-bg: rgba(255,107,107,0.12); --tag-color: #ff6b6b;">
+        <h4>Newschool</h4>
+        <p>Übertriebene Perspektiven, kräftige Farben und verspielte Motive – der Klassiker moderner Tattoo-Kunst.</p>
+        <span class="bw3-style-tag">Bold</span>
+      </div>
+      <div class="bw3-style-card" style="--accent: var(--bubble-lavender); --tag-bg: rgba(192,132,252,0.12); --tag-color: #c084fc;">
+        <h4>Custom Design</h4>
+        <p>Deine Idee, meine Interpretation. Gemeinsam entwickeln wir ein einzigartiges Motiv, das nur dir gehört.</p>
+        <span class="bw3-style-tag">Unique</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="bw3-section" id="gallery">
+    <div class="bw3-section-title">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Portfolio
+    </div>
+    <p class="bw3-section-sub">Eine Auswahl ausgewählter Arbeiten</p>
+
+    <div class="bw3-gallery" id="galleryGrid"></div>
+  </section>
+
+  <section class="bw3-section" id="contact">
+    <div class="bw3-section-title">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Kontakt
+    </div>
+    <p class="bw3-section-sub">Lass uns über dein nächstes Tattoo sprechen</p>
+
+    <div class="bw3-contact-grid">
+      <div class="bw3-contact-card" onclick="window.open('tel:+494055899363','_blank')">
+        <div class="bw3-contact-icon" style="--icon-bg: rgba(255,143,163,0.12); --icon-color: #ff8fa3;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        </div>
+        <h4>Telefon</h4>
+        <p>+49 40 55899363</p>
+      </div>
+      <div class="bw3-contact-card" onclick="window.open('mailto:tschiggys@bubblegumart.de','_blank')">
+        <div class="bw3-contact-icon" style="--icon-bg: rgba(78,205,196,0.12); --icon-color: #4ecdc4;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h4>E-Mail</h4>
+        <p>tschiggys@bubblegumart.de</p>
+      </div>
+      <div class="bw3-contact-card" onclick="window.open('https://instagram.com/tschiggys','_blank')">
+        <div class="bw3-contact-icon" style="--icon-bg: rgba(192,132,252,0.12); --icon-color: #c084fc;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <h4>Instagram</h4>
+        <p>@tschiggys</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bw3-footer">
+    <p>&#169; 2025 Tschiggys Bubblegum Art Tattoo · Beckstraße 7, 20357 Hamburg</p>
+    <p style="margin-top:4px; opacity:0.6;">Redesign-Konzept – nicht die Live-Website</p>
+  </footer>
+
+  <div class="bw3-lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="bw3-lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&#215;</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+</div>
+
+<script>
+  let isDark = false;
+  function toggleTheme() {
+    isDark = !isDark;
+    const root = document.getElementById('bw3Root');
+    const icon = document.getElementById('themeIcon');
+    if (isDark) {
+      root.setAttribute('data-theme', 'dark');
+      icon.textContent = '&#9728;️';
+    } else {
+      root.removeAttribute('data-theme');
+      icon.textContent = '&#127769;';
+    }
+  }
+
+  const canvas = document.getElementById('heroCanvas');
+  const ctx = canvas.getContext('2d');
+  let bubbles = [];
+  let mouse = { x: null, y: null };
+  let scrollY = 0;
+
+  function resizeCanvas() {
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+  });
+  canvas.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+
+  window.addEventListener('scroll', () => {
+    scrollY = window.scrollY;
+  });
+
+  const bubbleColors = [
+    { r: 255, g: 143, b: 163 },
+    { r: 78, g: 205, b: 196 },
+    { r: 255, g: 107, b: 107 },
+    { r: 192, g: 132, b: 252 },
+    { r: 255, g: 217, b: 61 },
+    { r: 116, g: 192, b: 252 },
+  ];
+
+  class SoapBubble {
+    constructor(layer) {
+      this.layer = layer;
+      this.reset(true);
+    }
+
+    reset(randomY = false) {
+      const layerFactors = [
+        { sizeMin: 15, sizeMax: 35, speedMin: 0.15, speedMax: 0.35, opacity: 0.12 },
+        { sizeMin: 25, sizeMax: 55, speedMin: 0.3, speedMax: 0.6, opacity: 0.2 },
+        { sizeMin: 40, sizeMax: 90, speedMin: 0.5, speedMax: 1.0, opacity: 0.28 },
+      ];
+      const f = layerFactors[this.layer];
+
+      this.x = Math.random() * canvas.width;
+      this.y = randomY ? Math.random() * canvas.height : canvas.height + 50 + Math.random() * 100;
+      this.baseSize = f.sizeMin + Math.random() * (f.sizeMax - f.sizeMin);
+      this.size = this.baseSize;
+      this.speedY = -(f.speedMin + Math.random() * (f.speedMax - f.speedMin));
+      this.speedX = (Math.random() - 0.5) * 0.4;
+      this.wobble = Math.random() * Math.PI * 2;
+      this.wobbleSpeed = 0.01 + Math.random() * 0.02;
+      this.wobbleAmp = 0.3 + Math.random() * 0.5;
+      this.opacity = f.opacity + Math.random() * 0.08;
+      this.color = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
+      this.pulse = Math.random() * Math.PI * 2;
+      this.pulseSpeed = 0.015 + Math.random() * 0.02;
+    }
+
+    update() {
+      const parallaxFactor = [0.15, 0.35, 0.6][this.layer];
+      const scrollOffset = scrollY * parallaxFactor;
+
+      this.y += this.speedY;
+      this.wobble += this.wobbleSpeed;
+      this.pulse += this.pulseSpeed;
+
+      this.x += this.speedX + Math.sin(this.wobble) * this.wobbleAmp;
+      this.size = this.baseSize + Math.sin(this.pulse) * (this.baseSize * 0.08);
+
+      if (mouse.x !== null) {
+        const dx = this.x - mouse.x;
+        const dy = (this.y - scrollOffset) - mouse.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 150) {
+          const force = (150 - dist) / 150;
+          this.x += dx * force * 0.015;
+          this.y += dy * force * 0.015;
+        }
+      }
+
+      const effectiveY = this.y - scrollOffset;
+      if (effectiveY < -100 || this.x < -100 || this.x > canvas.width + 100) {
+        this.reset(false);
+      }
+    }
+
+    draw() {
+      const parallaxFactor = [0.15, 0.35, 0.6][this.layer];
+      const drawY = this.y - scrollY * parallaxFactor;
+
+      if (drawY < -this.size * 2 || drawY > canvas.height + this.size * 2) return;
+
+      const { r, g, b } = this.color;
+      const isDarkMode = document.getElementById('bw3Root').hasAttribute('data-theme');
+      const brightnessBoost = isDarkMode ? 1.4 : 1.0;
+
+      const grad = ctx.createRadialGradient(
+        this.x - this.size * 0.25, drawY - this.size * 0.25, 0,
+        this.x, drawY, this.size
+      );
+      grad.addColorStop(0, `rgba(255,255,255,${this.opacity * 0.6 * brightnessBoost})`);
+      grad.addColorStop(0.3, `rgba(${r},${g},${b},${this.opacity * 0.25 * brightnessBoost})`);
+      grad.addColorStop(0.7, `rgba(${r},${g},${b},${this.opacity * 0.15 * brightnessBoost})`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},${this.opacity * 0.05 * brightnessBoost})`);
+
+      ctx.beginPath();
+      ctx.arc(this.x, drawY, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(this.x, drawY, this.size, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${r},${g},${b},${this.opacity * 0.5 * brightnessBoost})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      const hl1Grad = ctx.createRadialGradient(
+        this.x - this.size * 0.35, drawY - this.size * 0.35, 0,
+        this.x - this.size * 0.35, drawY - this.size * 0.35, this.size * 0.35
+      );
+      hl1Grad.addColorStop(0, `rgba(255,255,255,${this.opacity * 1.2 * brightnessBoost})`);
+      hl1Grad.addColorStop(1, `rgba(255,255,255,0)`);
+
+      ctx.beginPath();
+      ctx.arc(this.x - this.size * 0.3, drawY - this.size * 0.3, this.size * 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = hl1Grad;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(this.x - this.size * 0.35, drawY - this.size * 0.35, this.size * 0.08, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${this.opacity * 1.5 * brightnessBoost})`;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(this.x + this.size * 0.25, drawY + this.size * 0.25, this.size * 0.12, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${this.opacity * 0.4 * brightnessBoost})`;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(this.x, drawY, this.size * 0.92, -Math.PI * 0.7, -Math.PI * 0.3);
+      ctx.strokeStyle = `rgba(255,255,255,${this.opacity * 0.3 * brightnessBoost})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  for (let layer = 0; layer < 3; layer++) {
+    const count = layer === 0 ? 12 : layer === 1 ? 8 : 5;
+    for (let i = 0; i < count; i++) {
+      bubbles.push(new SoapBubble(layer));
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bubbles.forEach(b => { b.update(); b.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  const igImages = [
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/ddf9f103f42ea23016ed69f8bc765cebf0f81cf7.jpg', likes: 234, comments: 18 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/b84a31561ced595b1283f79ec1472e3e42bcc5a8.jpg', likes: 189, comments: 12 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/189fcaee75393e5bcd62fa082c7f57a565541c7f.jpg', likes: 312, comments: 24 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/68902783aaace35ed2a1d28b2ceff82ac33f236a.jpg', likes: 156, comments: 9 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/s3-media0.fl.yelpcdn.com/0ba65905c30d1c20f490e5c76b7d3ef256c55e72.jpg', likes: 278, comments: 21 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/5fea108bed023e843d4d899ec2d870df32c91fce.jpg', likes: 198, comments: 15 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/8cf8502939aac3717e5b353af69b2abe4e54092e.jpg', likes: 245, comments: 19 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp', likes: 167, comments: 11 },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/ddf9f103f42ea23016ed69f8bc765cebf0f81cf7.jpg', likes: 289, comments: 22 },
+  ];
+
+  const galleryImages = [
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/b84a31561ced595b1283f79ec1472e3e42bcc5a8.jpg', cls: '', caption: 'Comic Dog' },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/189fcaee75393e5bcd62fa082c7f57a565541c7f.jpg', cls: 'tall', caption: 'Winnie Pooh' },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/68902783aaace35ed2a1d28b2ceff82ac33f236a.jpg', cls: '', caption: 'Sailor Penguin' },
+    { src: 'https://kimi-web-img.moonshot.cn/img/s3-media0.fl.yelpcdn.com/0ba65905c30d1c20f490e5c76b7d3ef256c55e72.jpg', cls: 'wide', caption: 'Hamburg Heart' },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/5fea108bed023e843d4d899ec2d870df32c91fce.jpg', cls: '', caption: 'Hamburg Character' },
+    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/8cf8502939aac3717e5b353af69b2abe4e54092e.jpg', cls: '', caption: 'Cute Shrimp' },
+  ];
+
+  const igGrid = document.getElementById('igGrid');
+  igImages.forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'bw3-ig-item';
+    div.style.transitionDelay = (i * 0.06) + 's';
+    div.innerHTML = `
+      <img src="${img.src}" alt="Tattoo ${i+1}" loading="lazy">
+      <div class="bw3-ig-overlay">
+        <span>&#9829; ${img.likes}</span>
+        <span>&#128172; ${img.comments}</span>
+      </div>
+    `;
+    div.onclick = () => openLightbox(img.src);
+    igGrid.appendChild(div);
+  });
+
+  const galleryGrid = document.getElementById('galleryGrid');
+  galleryImages.forEach((img, i) => {
+    const div = document.createElement('div');
+    div.className = 'bw3-gallery-item ' + img.cls;
+    div.style.transitionDelay = (i * 0.1) + 's';
+    div.innerHTML = `
+      <img src="${img.src}" alt="${img.caption}" loading="lazy">
+      <div class="bw3-gallery-caption">${img.caption}</div>
+    `;
+    div.onclick = () => openLightbox(img.src);
+    galleryGrid.appendChild(div);
+  });
+
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('active');
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+  }
+
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const sections = ['hero', 'instagram', 'styles', 'gallery', 'contact'];
+  const navLinks = {
+    instagram: document.getElementById('nav-instagram'),
+    styles: document.getElementById('nav-styles'),
+    gallery: document.getElementById('nav-gallery'),
+    contact: document.getElementById('nav-contact'),
+  };
+
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        Object.values(navLinks).forEach(l => l.classList.remove('active'));
+        if (navLinks[entry.target.id]) navLinks[entry.target.id].classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.bw3-ig-item').forEach(el => revealObserver.observe(el));
+  document.querySelectorAll('.bw3-style-card').forEach(el => revealObserver.observe(el));
+  document.querySelectorAll('.bw3-gallery-item').forEach(el => revealObserver.observe(el));
+  document.querySelectorAll('.bw3-contact-card').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
