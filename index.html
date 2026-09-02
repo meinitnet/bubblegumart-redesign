@@ -1083,55 +1083,58 @@
   }
   animate();
 
-  const igImages = [
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/ddf9f103f42ea23016ed69f8bc765cebf0f81cf7.jpg', likes: 234, comments: 18 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/b84a31561ced595b1283f79ec1472e3e42bcc5a8.jpg', likes: 189, comments: 12 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/189fcaee75393e5bcd62fa082c7f57a565541c7f.jpg', likes: 312, comments: 24 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/68902783aaace35ed2a1d28b2ceff82ac33f236a.jpg', likes: 156, comments: 9 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/s3-media0.fl.yelpcdn.com/0ba65905c30d1c20f490e5c76b7d3ef256c55e72.jpg', likes: 278, comments: 21 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/5fea108bed023e843d4d899ec2d870df32c91fce.jpg', likes: 198, comments: 15 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/8cf8502939aac3717e5b353af69b2abe4e54092e.jpg', likes: 245, comments: 19 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp', likes: 167, comments: 11 },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/ddf9f103f42ea23016ed69f8bc765cebf0f81cf7.jpg', likes: 289, comments: 22 },
-  ];
-
-  const galleryImages = [
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/b84a31561ced595b1283f79ec1472e3e42bcc5a8.jpg', cls: '', caption: 'Comic Dog' },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/189fcaee75393e5bcd62fa082c7f57a565541c7f.jpg', cls: 'tall', caption: 'Winnie Pooh' },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/68902783aaace35ed2a1d28b2ceff82ac33f236a.jpg', cls: '', caption: 'Sailor Penguin' },
-    { src: 'https://kimi-web-img.moonshot.cn/img/s3-media0.fl.yelpcdn.com/0ba65905c30d1c20f490e5c76b7d3ef256c55e72.jpg', cls: 'wide', caption: 'Hamburg Heart' },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/5fea108bed023e843d4d899ec2d870df32c91fce.jpg', cls: '', caption: 'Hamburg Character' },
-    { src: 'https://kimi-web-img.moonshot.cn/img/bubblegumart.de/8cf8502939aac3717e5b353af69b2abe4e54092e.jpg', cls: '', caption: 'Cute Shrimp' },
-  ];
-
   const igGrid = document.getElementById('igGrid');
-  igImages.forEach((img, i) => {
-    const div = document.createElement('div');
-    div.className = 'bw3-ig-item';
-    div.style.transitionDelay = (i * 0.06) + 's';
-    div.innerHTML = `
-      <img src="${img.src}" alt="Tattoo ${i+1}" loading="lazy">
-      <div class="bw3-ig-overlay">
-        <span>&#9829; ${img.likes}</span>
-        <span>&#128172; ${img.comments}</span>
-      </div>
-    `;
-    div.onclick = () => openLightbox(img.src);
-    igGrid.appendChild(div);
-  });
-
   const galleryGrid = document.getElementById('galleryGrid');
-  galleryImages.forEach((img, i) => {
-    const div = document.createElement('div');
-    div.className = 'bw3-gallery-item ' + img.cls;
-    div.style.transitionDelay = (i * 0.1) + 's';
-    div.innerHTML = `
-      <img src="${img.src}" alt="${img.caption}" loading="lazy">
-      <div class="bw3-gallery-caption">${img.caption}</div>
-    `;
-    div.onclick = () => openLightbox(img.src);
-    galleryGrid.appendChild(div);
-  });
+
+  function renderInstagramMedia(media) {
+    igGrid.replaceChildren();
+    galleryGrid.replaceChildren();
+
+    media.slice(0, 9).forEach((img, i) => {
+      const div = document.createElement('a');
+      div.className = 'bw3-ig-item';
+      div.style.transitionDelay = (i * 0.06) + 's';
+      div.href = img.permalink;
+      div.target = '_blank';
+      div.rel = 'noopener noreferrer';
+      div.innerHTML = `
+        <img src="${img.imageUrl}" alt="${img.caption}" loading="lazy">
+        <div class="bw3-ig-overlay">
+          <span>&#9829; ${img.likes}</span>
+          <span>&#128172; ${img.comments}</span>
+        </div>
+      `;
+      igGrid.appendChild(div);
+    });
+
+    media.slice(0, 6).forEach((img, i) => {
+      const div = document.createElement('a');
+      div.className = 'bw3-gallery-item ' + (i === 1 ? 'tall' : i === 3 ? 'wide' : '');
+      div.style.transitionDelay = (i * 0.1) + 's';
+      div.href = img.permalink;
+      div.target = '_blank';
+      div.rel = 'noopener noreferrer';
+      div.innerHTML = `
+        <img src="${img.imageUrl}" alt="${img.caption}" loading="lazy">
+        <div class="bw3-gallery-caption">${img.caption}</div>
+      `;
+      galleryGrid.appendChild(div);
+    });
+
+    document.querySelectorAll('.bw3-ig-item, .bw3-gallery-item').forEach((element) => revealObserver.observe(element));
+  }
+
+  async function loadInstagramMedia() {
+    try {
+      const response = await fetch('/api/instagram-media');
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error);
+      renderInstagramMedia(payload.data);
+    } catch (error) {
+      igGrid.textContent = 'Instagram-Beiträge sind momentan nicht verfügbar.';
+      galleryGrid.textContent = 'Instagram-Portfolio ist momentan nicht verfügbar.';
+    }
+  }
 
   function openLightbox(src) {
     document.getElementById('lightboxImg').src = src;
@@ -1176,6 +1179,8 @@
   document.querySelectorAll('.bw3-style-card').forEach(el => revealObserver.observe(el));
   document.querySelectorAll('.bw3-gallery-item').forEach(el => revealObserver.observe(el));
   document.querySelectorAll('.bw3-contact-card').forEach(el => revealObserver.observe(el));
+
+  loadInstagramMedia();
 </script>
 
 </body>
