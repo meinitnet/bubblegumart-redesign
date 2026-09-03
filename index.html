@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tschiggys Bubblegum Art Tattoo Hamburg</title>
   <meta name="description" content="Tschiggys Bubblegum Art Tattoo in Hamburg: Comic-, Sketch-, Newschool- und individuelle Custom-Tattoos in Eimsbüttel und der Sternschanze.">
+  <meta name="keywords" content="Tattoo Hamburg, Tattoostudio Hamburg, Comic Tattoo, Sketch Tattoo, Newschool Tattoo, Custom Tattoo, Tattoo Eimsbüttel, Tattoo Sternschanze, Tschiggys Bubblegum Art">
   <link rel="canonical" href="https://bubblegumart.de/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="de_DE">
   <meta property="og:title" content="Tschiggys Bubblegum Art Tattoo Hamburg">
   <meta property="og:description" content="Comic-, Sketch-, Newschool- und Custom-Tattoos in Hamburg Eimsbüttel und der Sternschanze.">
+  <meta property="og:image" content="https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp">
   <meta property="og:url" content="https://bubblegumart.de/">
   <meta property="og:site_name" content="Tschiggys Bubblegum Art Tattoo">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -414,7 +417,10 @@
       box-shadow: 0 4px 20px var(--shadow);
       animation: fadeUp 0.7s ease-out both;
       transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+      text-decoration: none;
+      color: inherit;
     }
+    .bw3-ig-header:hover { box-shadow: 0 8px 26px var(--shadow); }
     .bw3-ig-avatar {
       width: 68px;
       height: 68px;
@@ -830,7 +836,7 @@
     <canvas class="bw3-hero-canvas" id="heroCanvas"></canvas>
     <div class="bw3-hero-content">
       <h1>Tschiggys <span class="highlight">Bubblegum Art Tattoo</span></h1>
-      <p>Comic, Sketch & Custom Tattoos in Hamburg Sternschanze/Eimsbüttel. Individuelle Motive mit Persönlichkeit – von der ersten Idee bis zur fertigen Haut.</p>
+      <p>Comic, Sketch & Custom Tattoos in Hamburg Sternschanze/Eimsbüttel. Individuelle Motive mit Persönlichkeit – von der ersten Idee bis zum fertigen Tattoo auf der Haut.</p>
       <div class="bw3-hero-badges">
         <span class="bw3-badge">Comic Style</span>
         <span class="bw3-badge">Sketch</span>
@@ -871,18 +877,18 @@
     </div>
     <p class="bw3-section-sub">Frisch aus dem Studio – direkt von @tschiggys</p>
 
-    <div class="bw3-ig-header">
-      <img class="bw3-ig-avatar" src="https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp" alt="Tschiggy">
+    <a class="bw3-ig-header" href="https://instagram.com/tschiggys" target="_blank" rel="noopener">
+      <img class="bw3-ig-avatar" id="igAvatar" src="https://kimi-web-img.moonshot.cn/img/bubblegumart.de/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp" alt="Tschiggy">
       <div class="bw3-ig-info">
-        <h3>tschiggys</h3>
+        <h3 id="igUsername">tschiggys</h3>
         <p>Bubblegum Art Tattoo · Hamburg</p>
       </div>
       <div class="bw3-ig-stats">
-        <div class="bw3-ig-stat"><strong>487</strong><span>Posts</span></div>
-        <div class="bw3-ig-stat"><strong>12.3k</strong><span>Follower</span></div>
-        <div class="bw3-ig-stat"><strong>892</strong><span>Following</span></div>
+        <div class="bw3-ig-stat"><strong id="igPostsCount">487</strong><span>Posts</span></div>
+        <div class="bw3-ig-stat"><strong id="igFollowersCount">12.3k</strong><span>Follower</span></div>
+        <div class="bw3-ig-stat"><strong id="igFollowingCount">892</strong><span>Following</span></div>
       </div>
-    </div>
+    </a>
 
     <div class="bw3-ig-grid" id="igGrid"></div>
     <div class="bw3-pagination" id="igPagination" aria-label="Instagram-Seiten"></div>
@@ -1217,6 +1223,10 @@
   const instagramPageSize = 12;
   const galleryPageSize = 9;
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  }
+
   function renderInstagramMedia(media) {
     currentMedia = media;
     portfolioMedia = shuffleMedia(media);
@@ -1249,7 +1259,7 @@
         openLightbox(img.imageUrl, img.caption);
       });
       div.innerHTML = `
-        <img src="${img.thumbnailUrl || img.imageUrl}" alt="${img.caption}" loading="lazy">
+        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(img.caption)}" loading="lazy" decoding="async">
         <div class="bw3-ig-overlay">
           <span>&#9829; ${img.likes}</span>
           <span>&#128172; ${img.comments}</span>
@@ -1269,8 +1279,8 @@
         openLightbox(img.imageUrl, img.caption);
       });
       div.innerHTML = `
-        <img src="${img.thumbnailUrl || img.imageUrl}" alt="${img.caption}" loading="lazy">
-        <div class="bw3-gallery-caption">${img.caption}</div>
+        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(img.caption)}" loading="lazy" decoding="async">
+        <div class="bw3-gallery-caption">${escapeHtml(img.caption)}</div>
       `;
       galleryGrid.appendChild(div);
     });
@@ -1337,6 +1347,28 @@
     if (currentPage <= 3) return [1, 2, 3, null, pageCount];
     if (currentPage >= pageCount - 2) return [1, null, pageCount - 2, pageCount - 1, pageCount];
     return [1, null, currentPage, null, pageCount];
+  }
+
+  function formatCount(value) {
+    const number = Number(value) || 0;
+    if (number >= 1000000) return (number / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (number >= 1000) return (number / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(number);
+  }
+
+  async function loadInstagramProfile() {
+    try {
+      const response = await fetch('/api/instagram-profile');
+      const profile = await response.json();
+      if (!response.ok) throw new Error(profile.error);
+      document.getElementById('igUsername').textContent = profile.username;
+      document.getElementById('igPostsCount').textContent = formatCount(profile.posts);
+      document.getElementById('igFollowersCount').textContent = formatCount(profile.followers);
+      document.getElementById('igFollowingCount').textContent = formatCount(profile.following);
+      if (profile.avatarUrl) document.getElementById('igAvatar').src = profile.avatarUrl;
+    } catch (error) {
+      // Statische Fallback-Werte im Markup bleiben sichtbar, wenn Instagram nicht erreichbar ist.
+    }
   }
 
   async function loadInstagramMedia() {
@@ -1407,6 +1439,7 @@
   document.querySelectorAll('.bw3-contact-card').forEach(el => revealObserver.observe(el));
 
   loadInstagramMedia();
+  loadInstagramProfile();
 </script>
 
 </body>

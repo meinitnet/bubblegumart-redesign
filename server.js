@@ -12,9 +12,12 @@ const localMediaOnly = /^(1|true|yes)$/i.test(process.env.LOCAL_MEDIA_ONLY || ''
 const cacheLifetimeMs = 15 * 60 * 1000;
 const mediaDirectory = path.resolve(process.env.MEDIA_CACHE_DIR || path.join(__dirname, 'storage', 'instagram'));
 const mediaIndexPath = path.join(mediaDirectory, 'media.json');
+const profileIndexPath = path.join(mediaDirectory, 'profile.json');
 const debugEnabled = /^(1|true|yes)$/i.test(process.env.DEBUG || '');
 let mediaCache = { value: readStoredMedia(), expiresAt: 0 };
 let mediaRefreshPromise = null;
+let profileCache = { value: readStoredProfile(), expiresAt: 0 };
+let profileRefreshPromise = null;
 
 function debugLog(message, details = '') {
   if (!debugEnabled) return;
@@ -42,14 +45,111 @@ function readStoredMedia() {
   }
 }
 
+function readStoredProfile() {
+  try {
+    const storedProfile = JSON.parse(fs.readFileSync(profileIndexPath, 'utf8'));
+    return storedProfile && typeof storedProfile === 'object' ? storedProfile : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistProfile(profile) {
+  fs.writeFileSync(profileIndexPath, JSON.stringify(profile));
+}
+
+async function refreshInstagramProfile() {
+  if (!instagramUserId || !instagramAccessToken) {
+    throw new Error('Instagram-Zugangsdaten fehlen. INSTAGRAM_USER_ID und INSTAGRAM_ACCESS_TOKEN in .env setzen.');
+  }
+
+  const fields = 'username,biography,followers_count,follows_count,media_count,profile_picture_url';
+  const url = new URL(`https://graph.instagram.com/${instagramUserId}`);
+  url.searchParams.set('fields', fields);
+  url.searchParams.set('access_token', instagramAccessToken);
+
+  debugLog('Instagram: Profil-Refresh gestartet');
+  const response = await fetch(url);
+  debugLog(`Instagram: Profil antwortet mit ${response.status} ${response.statusText}`);
+
+  if (!response.ok) {
+    let errorDetails = '';
+    try {
+      const errorPayload = await response.json();
+      errorDetails = errorPayload.error?.message || errorPayload.error?.type || '';
+    } catch {
+      debugLog('Instagram: Profil-Fehlerantwort war kein JSON');
+    }
+    throw new Error(`Instagram-Profil konnte nicht geladen werden${errorDetails ? `: ${errorDetails}` : '.'}`);
+  }
+
+  const payload = await response.json();
+  const profile = {
+    username: payload.username || 'tschiggys',
+    biography: payload.biography || '',
+    posts: payload.media_count ?? 0,
+    followers: payload.followers_count ?? 0,
+    following: payload.follows_count ?? 0,
+    avatarUrl: payload.profile_picture_url || '',
+  };
+  profileCache = { value: profile, expiresAt: Date.now() + cacheLifetimeMs };
+  persistProfile(profile);
+  debugLog(`Instagram: Profil-Refresh abgeschlossen (${profile.followers} Follower, ${profile.posts} Beitraege)`);
+  return profile;
+}
+
+async function getInstagramProfile() {
+  if (localMediaOnly && profileCache.value) {
+    return profileCache.value;
+  }
+
+  if (profileCache.value) {
+    if (profileCache.expiresAt <= Date.now() && !profileRefreshPromise) {
+      profileRefreshPromise = refreshInstagramProfile()
+        .catch((error) => debugLog(`Instagram: Profil-Hintergrund-Refresh fehlgeschlagen: ${error.message}`))
+        .finally(() => { profileRefreshPromise = null; });
+    }
+    return profileCache.value;
+  }
+
+  try {
+    profileRefreshPromise = refreshInstagramProfile();
+    return await profileRefreshPromise;
+  } catch (error) {
+    error.statusCode = error.statusCode || 502;
+    debugLog(`Instagram: erster Profil-Refresh fehlgeschlagen: ${error.stack || error.message}`);
+    throw error;
+  } finally {
+    profileRefreshPromise = null;
+  }
+}
+
 function imageExtension(contentType) {
   const extensions = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
   return extensions[contentType?.split(';')[0].toLowerCase()] || '.jpg';
 }
 
-async function storeImage(id, remoteUrl) {
-  const existingFile = fs.readdirSync(mediaDirectory, { withFileTypes: true })
-    .find((entry) => entry.isFile() && entry.name.startsWith(`${id}.`));
+function captionSlug(caption) {
+  const words = String(caption || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 4);
+  return words.join('-') || 'tattoo';
+}
+
+function findStoredFile(id) {
+  const idPattern = new RegExp(`-${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.[a-z0-9]+$`);
+  return fs.readdirSync(mediaDirectory, { withFileTypes: true })
+    .find((entry) => entry.isFile() && idPattern.test(entry.name));
+}
+
+async function storeImage(id, remoteUrl, caption) {
+  const existingFile = findStoredFile(id);
   if (existingFile) {
     debugLog(`Bild ${id}: Cache-Treffer (${existingFile.name})`);
     return `/instagram-media/${existingFile.name}`;
@@ -59,7 +159,7 @@ async function storeImage(id, remoteUrl) {
   debugLog(`Bild ${id}: Download ${response.status} ${response.statusText}`);
   if (!response.ok) throw new Error(`Bild ${id} konnte nicht gespeichert werden.`);
 
-  const filename = `${id}${imageExtension(response.headers.get('content-type'))}`;
+  const filename = `${captionSlug(caption)}-${id}${imageExtension(response.headers.get('content-type'))}`;
   fs.writeFileSync(path.join(mediaDirectory, filename), Buffer.from(await response.arrayBuffer()));
   return `/instagram-media/${filename}`;
 }
@@ -176,7 +276,7 @@ async function refreshInstagramMedia(loadAllPages) {
       return { ...existingItem, ...item, imageUrl: existingItem.imageUrl };
     }
     downloadedCount += 1;
-    return { ...item, imageUrl: await storeImage(item.id, item.imageUrl) };
+    return { ...item, imageUrl: await storeImage(item.id, item.imageUrl, item.caption) };
   }));
 
   const refreshedIds = new Set(refreshedMedia.map((item) => item.id));
@@ -229,6 +329,17 @@ const server = http.createServer(async (request, response) => {
   if (requestUrl.pathname === '/api/instagram-media') {
     try {
       sendJson(response, 200, { data: await getInstagramMedia() });
+      debugLog(`Response: 200 nach ${Date.now() - startedAt} ms`);
+    } catch (error) {
+      debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
+      sendJson(response, error.statusCode || 500, { error: error.message || 'Serverfehler' });
+    }
+    return;
+  }
+
+  if (requestUrl.pathname === '/api/instagram-profile') {
+    try {
+      sendJson(response, 200, await getInstagramProfile());
       debugLog(`Response: 200 nach ${Date.now() - startedAt} ms`);
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
