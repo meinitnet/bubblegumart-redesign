@@ -472,6 +472,11 @@ function hasStoredVideo(videoUrl) {
   return fs.existsSync(path.join(mediaDirectory, path.basename(videoUrl)));
 }
 
+function findStoredVideo(id) {
+  if (!id) return undefined;
+  return fs.readdirSync(mediaDirectory).find((name) => name.endsWith(`-${id}-video.mp4`));
+}
+
 async function storeVideo(id, remoteUrl, item) {
   const filename = `${mediaSlug(item)}-${id}-video.mp4`;
   const existing = fs.readdirSync(mediaDirectory).find((name) => name.endsWith(`-${id}-video.mp4`));
@@ -961,7 +966,11 @@ const server = http.createServer(async (request, response) => {
   if (subpages[requestUrl.pathname]) {
     try {
       const media = (await getInstagramMedia()).filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
-        .map((item) => (hasStoredVideo(item.videoUrl) ? item : { ...item, videoUrl: undefined }));
+        .map((item) => {
+          if (hasStoredVideo(item.videoUrl)) return item;
+          const stored = findStoredVideo(item.id);
+          return { ...item, videoUrl: stored ? `/instagram-media/${stored}` : undefined };
+        });
       const html = renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: extractCss() });
       sendText(request, response, 'text/html; charset=utf-8', minifyHtml(html), 'public, max-age=0, must-revalidate');
     } catch (error) {
@@ -1053,9 +1062,6 @@ const server = http.createServer(async (request, response) => {
       'Cache-Control': 'public, max-age=31536000, immutable',
       'Accept-Ranges': 'bytes',
     };
-    if (requestUrl.searchParams.has('download') && path.extname(filename).toLowerCase() === '.mp4') {
-      headers['Content-Disposition'] = `attachment; filename="${filename.replace(/"/g, '')}"`;
-    }
     const size = fs.statSync(filePath).size;
     const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.range || '');
     if (range && (range[1] || range[2])) {

@@ -64,6 +64,7 @@ const extraCss = `
 .bw3-page-more a { color: var(--bubble-coral); font-weight: 600; }
 .bw3-root .bw3-style-card, .bw3-root .bw3-gallery-item, .bw3-root .bw3-contact-card { opacity: 1; transform: none; }
 .bw3-root .bw3-gallery-item { aspect-ratio: 1; }
+.bw3-root .bw3-gallery-item[hidden] { display: none; }
 .bw3-root .bw3-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .bw3-video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
 .bw3-video-item { margin: 0; }
@@ -99,12 +100,12 @@ function renderSubpage(pathname, ctx) {
       </article>`).join('')}</div>
       <p class="bw3-page-more"><a href="/portfolio/">Beispiele im Portfolio ansehen →</a> · <a href="/kontakt/">Termin anfragen →</a></p>`;
   } else if (page.key === 'gallery') {
-    const items = media.filter((item) => item.isTattooPortfolio).slice(0, 48);
+    const items = media.filter((item) => item.isTattooPortfolio);
     body = items.length
       ? `<div class="bw3-gallery" id="galleryGrid">${items.map((item) => {
         const altText = e(item.altText || 'Tattoo von Tschiggys Bubblegum Art');
         return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
-      }).join('')}</div>`
+      }).join('')}</div><div class="bw3-pagination" id="galleryPagination" aria-label="Portfolio-Seiten"></div>`
       : '<p class="bw3-section-sub">Aktuelle Arbeiten findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
     body += '<p class="bw3-page-more"><a href="/styles/">Alle Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>';
     if (items.length) {
@@ -129,17 +130,17 @@ function renderSubpage(pathname, ctx) {
       });
     }
   } else if (page.key === 'videos') {
-    const items = media.filter((item) => item.videoUrl).slice(0, 24);
+    const items = media.filter((item) => item.videoUrl);
     body = items.length
       ? `<div class="bw3-video-grid">${items.map((item) => {
         const altText = e(item.altText || 'Tattoo-Reel von Tschiggys Bubblegum Art');
-        return `<figure class="bw3-video-item"><video controls preload="none" playsinline poster="${e(item.thumbnailUrl || item.imageUrl)}" src="${e(item.videoUrl)}"></video><figcaption>${altText}<a href="${e(item.videoUrl)}?download=1" download>MP4 herunterladen</a></figcaption></figure>`;
+        return `<figure class="bw3-video-item"><video controls preload="none" playsinline poster="${e(item.thumbnailUrl || item.imageUrl)}" src="${e(item.videoUrl)}"></video><figcaption>${altText}</figcaption></figure>`;
       }).join('')}</div>`
       : '<p class="bw3-section-sub">Aktuelle Reels findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
     body += `<div class="bw3-video-text">
       <h2>Tattoo Reels aus dem Studio in Hamburg</h2>
       <p>Von Live-Momenten direkt von Tschiggy aus dem Studio in Hamburg-Eimsbüttel, nahe der Sternschanze, bis zum fertig gestochenen Tattoo: Hier siehst du alles in Bewegung. Beim Stechen, beim Entwurf, im Studioalltag und am Ende das Ergebnis – bunte Comic- und Cartoon-Tattoos, feine Sketch-Linien, verspielte Newschool-Designs und Custom-Tattoos nach deiner Idee.</p>
-      <p>Die Reels zeigen, wie die Farben und Linien auf der Haut wirken, und geben dir einen echten Eindruck vom Stil, bevor du dein Tattoo in Hamburg planst. Jedes Reel kannst du als MP4 herunterladen und für dein Moodboard speichern.</p>
+      <p>Die Reels zeigen, wie die Farben und Linien auf der Haut wirken, und geben dir einen echten Eindruck vom Stil, bevor du dein Tattoo in Hamburg planst.</p>
       <p>Mehr Motive findest du im <a href="/portfolio/">Portfolio</a>, alle Stilrichtungen auf der Seite <a href="/styles/">Tattoo Styles</a>. Du hast schon eine Idee? Dann <a href="/kontakt/">frag deinen Termin an</a> – deine Idee, meine Interpretation.</p>
     </div>
     <p class="bw3-page-more"><a href="/portfolio/">Zum Portfolio →</a> · <a href="/styles/">Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>`;
@@ -244,6 +245,26 @@ function renderSubpage(pathname, ctx) {
   btn.addEventListener('click',function(){dark=!dark;apply();});
   apply();
 })();
+${page.key === 'gallery' ? `(function(){
+  var grid=document.getElementById('galleryGrid'),nav=document.getElementById('galleryPagination');
+  if(!grid||!nav)return;
+  var items=Array.prototype.slice.call(grid.children),size=12,current=1,pages=Math.ceil(items.length/size);
+  for(var i=items.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=items[i];items[i]=items[j];items[j]=t;}
+  items.forEach(function(el){grid.appendChild(el);});
+  function btn(label,page,opts){var b=document.createElement('button');b.type='button';b.textContent=label;if(opts&&opts.disabled)b.disabled=true;if(opts&&opts.active){b.className='active';b.setAttribute('aria-current','page');}b.addEventListener('click',function(){current=page;render();grid.scrollIntoView({behavior:'smooth',block:'start'});});return b;}
+  function render(){
+    items.forEach(function(el,i){el.hidden=i<(current-1)*size||i>=current*size;});
+    nav.textContent='';
+    if(pages<=1)return;
+    nav.appendChild(btn('\\u2190',current-1,{disabled:current===1}));
+    for(var p=1;p<=pages;p++){
+      if(p===1||p===pages||Math.abs(p-current)<=1){nav.appendChild(btn(String(p),p,{active:p===current}));}
+      else if(Math.abs(p-current)===2){var s=document.createElement('span');s.className='ellipsis';s.textContent='\\u2026';nav.appendChild(s);}
+    }
+    nav.appendChild(btn('\\u2192',current+1,{disabled:current===pages}));
+  }
+  render();
+})();` : ''}
 </script>
 </body>
 </html>`;
