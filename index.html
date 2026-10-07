@@ -258,7 +258,7 @@
       font-weight: 400;
       line-height: 1.15;
       margin-bottom: 18px;
-      animation: fadeUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+      animation: heroRise 0.5s ease-out both;
       font-family: 'Lobster', cursive;
       color: var(--text-primary);
       text-shadow: 2px 3px 0px rgba(255, 143, 163, 0.2), 4px 6px 0px rgba(192, 132, 252, 0.1);
@@ -293,7 +293,7 @@
       color: var(--text-secondary);
       line-height: 1.65;
       margin-bottom: 36px;
-      animation: fadeUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+      animation: heroRise 0.5s ease-out both;
       font-family: 'Inter', sans-serif;
       font-weight: 400;
       max-width: 520px;
@@ -306,7 +306,7 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
-      animation: fadeUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
+      animation: heroRise 0.5s ease-out both;
     }
     .bw3-badge {
       padding: 8px 18px;
@@ -344,6 +344,10 @@
       0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
       40% { transform: translateX(-50%) translateY(-12px); }
       60% { transform: translateX(-50%) translateY(-6px); }
+    }
+    @keyframes heroRise {
+      from { transform: translateY(16px); }
+      to { transform: translateY(0); }
     }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(40px); }
