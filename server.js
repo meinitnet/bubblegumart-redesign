@@ -429,6 +429,11 @@ function mediaSlug(item) {
   return captionSlug(stripHashtags(item.caption));
 }
 
+let cssCache = null;
+function cachedCss() {
+  return cssCache || (cssCache = extractCss());
+}
+
 function findStoredFile(id) {
   const idPattern = new RegExp(`-${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.[a-z0-9]+$`);
   return fs.readdirSync(mediaDirectory, { withFileTypes: true })
@@ -472,9 +477,20 @@ function hasStoredVideo(videoUrl) {
   return fs.existsSync(path.join(mediaDirectory, path.basename(videoUrl)));
 }
 
-function findStoredVideo(id) {
-  if (!id) return undefined;
-  return fs.readdirSync(mediaDirectory).find((name) => name.endsWith(`-${id}-video.mp4`));
+const renderedSubpages = new Map();
+let videoIndexCache = { builtAt: 0, map: new Map() };
+
+// Eine Verzeichnisabfrage alle 30 s statt einer pro Eintrag und Anfrage.
+function storedVideoIndex() {
+  if (Date.now() - videoIndexCache.builtAt > 30000) {
+    const map = new Map();
+    for (const name of fs.readdirSync(mediaDirectory)) {
+      const match = /-([^-]+)-video\.mp4$/.exec(name);
+      if (match) map.set(match[1], name);
+    }
+    videoIndexCache = { builtAt: Date.now(), map };
+  }
+  return videoIndexCache.map;
 }
 
 async function storeVideo(id, remoteUrl, item) {
@@ -745,7 +761,10 @@ async function getInstagramMedia() {
   if (mediaCache.value) {
     if (mediaCache.expiresAt <= Date.now() && !mediaRefreshPromise) {
       mediaRefreshPromise = refreshInstagramMedia(false)
-        .catch((error) => debugLog(`Instagram: Hintergrund-Refresh fehlgeschlagen: ${error.message}`))
+        .catch((error) => {
+          mediaCache = { ...mediaCache, expiresAt: Date.now() + 5 * 60 * 1000 };
+          debugLog(`Instagram: Hintergrund-Refresh fehlgeschlagen: ${error.message}`);
+        })
         .finally(() => { mediaRefreshPromise = null; });
       debugLog(`Instagram: liefere ${mediaCache.value.length} lokale Medien sofort aus`);
     }
@@ -801,7 +820,7 @@ function sendText(request, response, contentType, body, cacheControl, statusCode
   let variants = compressedBodies.get(etag);
   if (!variants) {
     if (compressedBodies.size > 50) compressedBodies.clear();
-    variants = { br: zlib.brotliCompressSync(body), gzip: zlib.gzipSync(body, { level: 9 }) };
+    variants = { br: zlib.brotliCompressSync(body, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }), gzip: zlib.gzipSync(body, { level: 6 }) };
     compressedBodies.set(etag, variants);
   }
 
@@ -965,14 +984,22 @@ const server = http.createServer(async (request, response) => {
 
   if (subpages[requestUrl.pathname]) {
     try {
-      const media = (await getInstagramMedia()).filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
-        .map((item) => {
-          if (hasStoredVideo(item.videoUrl)) return item;
-          const stored = findStoredVideo(item.id);
-          return { ...item, videoUrl: stored ? `/instagram-media/${stored}` : undefined };
-        });
-      const html = renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: extractCss() });
-      sendText(request, response, 'text/html; charset=utf-8', minifyHtml(html), 'public, max-age=0, must-revalidate');
+      const sourceMedia = await getInstagramMedia();
+      const videoIndex = storedVideoIndex();
+      let cached = renderedSubpages.get(requestUrl.pathname);
+      if (!cached || cached.sourceMedia !== sourceMedia || cached.videoIndex !== videoIndex) {
+        const media = sourceMedia.filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
+          .map((item) => {
+            if (hasStoredVideo(item.videoUrl)) return item;
+            const stored = videoIndex.get(item.id);
+            return { ...item, videoUrl: stored ? `/instagram-media/${stored}` : undefined };
+          });
+        const rendered = minifyHtml(renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: cachedCss() }));
+        cached = { sourceMedia, videoIndex, html: rendered };
+        renderedSubpages.set(requestUrl.pathname, cached);
+      }
+      const html = cached.html;
+      sendText(request, response, 'text/html; charset=utf-8', html, 'public, max-age=0, must-revalidate');
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
       sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
