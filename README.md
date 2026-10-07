@@ -119,4 +119,6 @@ Tattoo-Kontexten ausgewaehlt. Daraus erzeugt der Server beschreibende
 Alt-Texte wie `Tattoo von Tschiggy mit einem Anker im Bubblegum-Art-Stil` und
 verwendet die gleichen Motive fuer neue Bilddateinamen. Der Instagram-Caption
 bleibt unveraendert. `media.json` und heruntergeladene Medien sind Laufzeit-
-Cache und werden nicht ins Repository eingecheckt.
+Cache und werden nicht ins Repository eingecheckt. Das Instagram-Profilbild
+wird ebenfalls lokal gespeichert und bei einer geaenderten Instagram-URL
+aktualisiert.

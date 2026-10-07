@@ -288,6 +288,37 @@ function persistProfile(profile) {
   fs.writeFileSync(profileIndexPath, JSON.stringify(profile));
 }
 
+async function downloadProfileAvatar(remoteUrl, previousProfile) {
+  if (!remoteUrl) return previousProfile?.avatarUrl || '';
+  if (
+    previousProfile?.avatarUrl?.startsWith('/instagram-media/profile-avatar.')
+    && previousProfile.avatarSourceUrl === remoteUrl
+    && hasStoredImage(previousProfile.avatarUrl)
+  ) {
+    return previousProfile.avatarUrl;
+  }
+
+  const response = await fetch(remoteUrl);
+  if (!response.ok) {
+    throw new Error(`Instagram-Profilbild konnte nicht geladen werden (${response.status}).`);
+  }
+
+  const extension = imageExtension(response.headers.get('content-type'));
+  const filename = `profile-avatar${extension}`;
+  const targetPath = path.join(mediaDirectory, filename);
+  const temporaryPath = `${targetPath}.tmp`;
+  fs.writeFileSync(temporaryPath, Buffer.from(await response.arrayBuffer()));
+
+  for (const entry of fs.readdirSync(mediaDirectory)) {
+    if (/^profile-avatar\.(jpg|jpeg|png|webp)$/i.test(entry) && entry !== filename) {
+      fs.unlinkSync(path.join(mediaDirectory, entry));
+    }
+  }
+  fs.renameSync(temporaryPath, targetPath);
+  debugLog(`Instagram: Profilbild lokal aktualisiert (${filename})`);
+  return `/instagram-media/${filename}`;
+}
+
 async function refreshInstagramProfile() {
   if (!instagramUserId || !instagramAccessToken) {
     throw new Error('Instagram-Zugangsdaten fehlen. INSTAGRAM_USER_ID und INSTAGRAM_ACCESS_TOKEN in .env setzen.');
@@ -314,13 +345,23 @@ async function refreshInstagramProfile() {
   }
 
   const payload = await response.json();
+  const previousProfile = profileCache.value || readStoredProfile() || {};
+  const avatarSourceUrl = payload.profile_picture_url || '';
+  let avatarUrl = previousProfile.avatarUrl || '';
+  try {
+    avatarUrl = await downloadProfileAvatar(avatarSourceUrl, previousProfile);
+  } catch (error) {
+    debugLog(`Instagram: Profilbild-Download fehlgeschlagen: ${error.message}`);
+  }
+
   const profile = {
     username: payload.username || 'tschiggys',
     biography: payload.biography || '',
     posts: payload.media_count ?? 0,
     followers: payload.followers_count ?? 0,
     following: payload.follows_count ?? 0,
-    avatarUrl: payload.profile_picture_url || '',
+    avatarUrl,
+    avatarSourceUrl,
   };
   profileCache = { value: profile, expiresAt: Date.now() + cacheLifetimeMs };
   persistProfile(profile);
