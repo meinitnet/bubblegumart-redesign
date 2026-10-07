@@ -2,12 +2,53 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const { pages: subpages, renderSubpage, extractCss } = require('./subpages');
+const crypto = require('node:crypto');
 const sharp = require('sharp');
+const esbuild = require('esbuild');
 
 loadEnvironment();
 
 const port = Number(process.env.PORT || 3000);
 const siteUrl = (process.env.SITE_URL || 'https://bubblegumart.de').replace(/\/$/, '');
+const legacyRedirects = new Map([
+  ['/gallery', '/portfolio/'],
+  ['/tags/hamburg', '/kontakt/'],
+  ['/categories/tschiggy', '/styles/'],
+  ['/categories/impressum', '/impressum/'],
+  ['/categories/tattoo', '/styles/'],
+  ['/en', '/'],
+  ['/tags/custom-tattoo', '/styles/'],
+  ['/posts/impressum', '/impressum/'],
+  ['/posts/tschiggy', '/styles/'],
+  ['/tags/dsgvo', '/datenschutz/'],
+  ['/categories/datenschutz', '/datenschutz/'],
+  ['/en/categories', '/'],
+  ['/categories', '/styles/'],
+  ['/tags/dotwork', '/portfolio/'],
+  ['/posts/datenschutz', '/datenschutz/'],
+  ['/tags/datenschutz', '/datenschutz/'],
+  ['/tags/newschool', '/styles/'],
+  ['/tags/comic-tattoo', '/styles/'],
+  ['/tags/tattoo-artist', '/kontakt/'],
+  ['/categories/artists', '/kontakt/'],
+]);
+const permanentlyRemovedPaths = new Set([
+  '/posts/pedi',
+  '/categories/pedi',
+  '/tags/pedi',
+]);
+const legalPages = new Map([
+  ['/impressum/', 'impressum.html'],
+  ['/datenschutz/', 'datenschutz.html'],
+]);
+const legalCanonicalRedirects = new Map([
+  ['/styles', '/styles/'],
+  ['/portfolio', '/portfolio/'],
+  ['/kontakt', '/kontakt/'],
+  ['/impressum', '/impressum/'],
+  ['/datenschutz', '/datenschutz/'],
+]);
 const instagramUserId = process.env.INSTAGRAM_USER_ID;
 const instagramAccessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 const localMediaOnly = /^(1|true|yes)$/i.test(process.env.LOCAL_MEDIA_ONLY || '');
@@ -64,10 +105,19 @@ async function downloadFonts() {
 function readStoredMedia() {
   try {
     const storedMedia = JSON.parse(fs.readFileSync(mediaIndexPath, 'utf8'));
-    return Array.isArray(storedMedia) ? storedMedia : null;
+    return Array.isArray(storedMedia)
+      ? storedMedia.map((item) => ({ ...item, caption: cleanCaption(item.caption) }))
+      : null;
   } catch {
     return null;
   }
+}
+
+function cleanCaption(caption) {
+  return String(caption || '')
+    .replace(/[\p{Extended_Pictographic}\uFE0F\u200D\u{1F3FB}-\u{1F3FF}\u20E3]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function readStoredProfile() {
@@ -282,7 +332,10 @@ function createSitemap() {
   const media = mediaCache.value || readStoredMedia() || [];
   const imageEntries = media
     .filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
-    .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${item.caption ? `\n      <image:title>${escapeXml(item.caption)}</image:title>` : ''}\n    </image:image>`)
+    .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${cleanCaption(item.caption) ? `\n      <image:title>${escapeXml(cleanCaption(item.caption))}</image:title>` : ''}\n    </image:image>`)
+    .join('\n');
+  const legalEntries = [...Object.keys(subpages), ...legalPages.keys()]
+    .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n  </url>`)
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -292,6 +345,7 @@ function createSitemap() {
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>${imageEntries ? `\n${imageEntries}` : ''}
   </url>
+${legalEntries}
 </urlset>
 `;
 }
@@ -361,7 +415,7 @@ async function refreshInstagramMedia(loadAllPages) {
     .filter((item) => item.media_type !== 'VIDEO' || item.thumbnail_url)
     .map((item) => ({
       id: item.id,
-      caption: item.caption || 'Tattoo von @tschiggys',
+      caption: cleanCaption(item.caption || 'Tattoo von @tschiggys'),
       imageUrl: item.media_type === 'VIDEO' ? item.thumbnail_url : item.media_url,
       permalink: item.permalink,
       likes: item.like_count ?? 0,
@@ -447,10 +501,195 @@ function sendJson(request, response, statusCode, value) {
   });
 }
 
+const compressedBodies = new Map();
+
+function sendText(request, response, contentType, body, cacheControl) {
+  const etag = `"${crypto.createHash('sha1').update(body).digest('base64url')}"`;
+  const headers = { 'Content-Type': contentType, 'Cache-Control': cacheControl, ETag: etag, Vary: 'Accept-Encoding' };
+
+  if (request.headers['if-none-match'] === etag) {
+    response.writeHead(304, headers);
+    response.end();
+    return;
+  }
+
+  let variants = compressedBodies.get(etag);
+  if (!variants) {
+    if (compressedBodies.size > 50) compressedBodies.clear();
+    variants = { br: zlib.brotliCompressSync(body), gzip: zlib.gzipSync(body, { level: 9 }) };
+    compressedBodies.set(etag, variants);
+  }
+
+  const accepted = request.headers['accept-encoding'] || '';
+  const encoding = /\bbr\b/.test(accepted) ? 'br' : /\bgzip\b/.test(accepted) ? 'gzip' : null;
+  if (!encoding) {
+    response.writeHead(200, headers);
+    response.end(body);
+    return;
+  }
+  response.writeHead(200, { ...headers, 'Content-Encoding': encoding });
+  response.end(variants[encoding]);
+}
+
+function absoluteUrl(pathname) {
+  return `${siteUrl}${pathname}`;
+}
+
+const minifiedHtmlCache = new Map();
+
+// Minifiziert nur Inline-CSS und -JS; bei Fehlern bleibt der Originalblock erhalten.
+function minifyHtml(html) {
+  const cached = minifiedHtmlCache.get(html);
+  if (cached) return cached;
+
+  const minifyBlock = (loader) => (match, open, code, close) => {
+    try {
+      return `${open}${esbuild.transformSync(code, { loader, minify: true, legalComments: 'none' }).code.trim()}${close}`;
+    } catch (error) {
+      debugLog(`Minifizierung (${loader}) fehlgeschlagen: ${error.message}`);
+      return match;
+    }
+  };
+  const result = html
+    .replace(/(<style>)([\s\S]*?)(<\/style>)/g, minifyBlock('css'))
+    .replace(/(<script>)([\s\S]*?)(<\/script>)/g, minifyBlock('js'));
+
+  minifiedHtmlCache.clear();
+  minifiedHtmlCache.set(html, result);
+  return result;
+}
+
+function renderHomepage() {
+  const media = (mediaCache.value || readStoredMedia() || [])
+    .filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
+    .slice(0, 12);
+  const logoImage = absoluteUrl('/storage/img/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp');
+
+  const imageObjects = media.map((item) => ({
+    '@type': 'ImageObject',
+    contentUrl: absoluteUrl(item.imageUrl),
+    thumbnailUrl: absoluteUrl(item.thumbnailUrl || item.imageUrl),
+    name: cleanCaption(item.caption) || 'Tattoo von Tschiggys Bubblegum Art',
+    caption: cleanCaption(item.caption) || undefined,
+    uploadDate: item.timestamp || undefined,
+    creator: { '@id': `${siteUrl}/#studio` },
+    creditText: 'Tschiggys Bubblegum Art Tattoo',
+    license: absoluteUrl('/impressum/'),
+    acquireLicensePage: absoluteUrl('/kontakt/'),
+  }));
+
+  const graph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: `${siteUrl}/`,
+        name: 'Tschiggys Bubblegum Art Tattoo',
+        inLanguage: 'de-DE',
+        publisher: { '@id': `${siteUrl}/#studio` },
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${siteUrl}/#webpage`,
+        url: `${siteUrl}/`,
+        isPartOf: { '@id': `${siteUrl}/#website` },
+        primaryImageOfPage: { '@type': 'ImageObject', url: logoImage },
+        about: { '@id': `${siteUrl}/#studio` },
+        hasPart: [
+          { '@type': 'WebPageElement', name: 'Instagram', url: `${siteUrl}/#instagram` },
+          { '@type': 'WebPageElement', name: 'Tattoo Styles', url: `${siteUrl}/styles/` },
+          { '@type': 'WebPageElement', name: 'Portfolio', url: `${siteUrl}/portfolio/` },
+          { '@type': 'WebPageElement', name: 'Kontakt', url: `${siteUrl}/kontakt/` },
+        ],
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        name: ['Instagram', 'Styles', 'Portfolio', 'Kontakt', 'Impressum', 'Datenschutz'],
+        url: ['/#instagram', '/styles/', '/portfolio/', '/kontakt/', '/impressum/', '/datenschutz/'].map(absoluteUrl),
+      },
+      {
+        '@type': 'TattooParlor',
+        '@id': `${siteUrl}/#studio`,
+        name: 'Tschiggys Bubblegum Art Tattoo',
+        url: `${siteUrl}/`,
+        email: 'tschiggys@bubblegumart.de',
+        image: [logoImage, ...media.slice(0, 6).map((item) => absoluteUrl(item.imageUrl))],
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'Eimsbüttler Chaussee 18',
+          postalCode: '20259',
+          addressLocality: 'Hamburg',
+          addressCountry: 'DE',
+        },
+        areaServed: ['Hamburg', 'Eimsbüttel', 'Sternschanze'],
+        sameAs: ['https://instagram.com/tschiggys'],
+      },
+      ...(imageObjects.length
+        ? [{
+          '@type': 'ImageGallery',
+          '@id': `${siteUrl}/#gallery`,
+          url: `${siteUrl}/portfolio/`,
+          name: 'Tattoo Portfolio Hamburg',
+          about: { '@id': `${siteUrl}/#studio` },
+          image: imageObjects,
+        }]
+        : []),
+    ],
+  };
+
+  const galleryItems = media.slice(0, 8).map((item, index) => {
+    const caption = escapeXml(cleanCaption(item.caption));
+    const variant = index === 1 ? ' tall' : index === 3 ? ' wide' : '';
+    return `<a class="bw3-gallery-item${variant}" href="${escapeXml(item.imageUrl)}"><img src="${escapeXml(item.thumbnailUrl || item.imageUrl)}" alt="${caption || 'Tattoo von Tschiggys Bubblegum Art'}" width="${thumbnailWidth}" height="${thumbnailWidth}" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${caption}</div></a>`;
+  }).join('');
+
+  const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');
+  return minifyHtml(fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8'))
+    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, `<script type="application/ld+json">${jsonLd}</script>`)
+    .replace('<div class="bw3-gallery" id="galleryGrid"></div>', `<div class="bw3-gallery" id="galleryGrid">${galleryItems}</div>`);
+}
+
 const server = http.createServer(async (request, response) => {
   const startedAt = Date.now();
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
+  const normalizedPath = requestUrl.pathname.length > 1 ? requestUrl.pathname.replace(/\/+$/, '') : requestUrl.pathname;
   debugLog(`Request: ${request.method} ${requestUrl.pathname}${requestUrl.search}`);
+
+  const legacyQueryTarget = requestUrl.pathname === '/' && ['3269', '3233'].includes(requestUrl.searchParams.get('p'))
+    ? '/'
+    : null;
+  const legacyTarget = legacyQueryTarget || legacyRedirects.get(normalizedPath) || legalCanonicalRedirects.get(requestUrl.pathname);
+  if (legacyTarget) {
+    response.writeHead(301, {
+      Location: legacyTarget,
+      'Cache-Control': 'public, max-age=31536000',
+    });
+    response.end();
+    return;
+  }
+
+  if (permanentlyRemovedPaths.has(normalizedPath)) {
+    response.writeHead(410, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+    });
+    response.end('Dieser Inhalt ist dauerhaft nicht mehr verfügbar.');
+    return;
+  }
+
+  if (subpages[requestUrl.pathname]) {
+    const media = (mediaCache.value || readStoredMedia() || []).filter((item) => item.imageUrl?.startsWith('/instagram-media/'));
+    const html = renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: extractCss() });
+    sendText(request, response, 'text/html; charset=utf-8', minifyHtml(html), 'public, max-age=0, must-revalidate');
+    return;
+  }
+
+  const legalPage = legalPages.get(requestUrl.pathname);
+  if (legalPage) {
+    sendText(request, response, 'text/html; charset=utf-8', fs.readFileSync(path.join(__dirname, legalPage), 'utf8'), 'public, max-age=3600');
+    return;
+  }
 
   if (requestUrl.pathname === '/api/instagram-media') {
     try {
@@ -491,9 +730,7 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (requestUrl.pathname === '/sitemap.xml') {
-    const sitemap = createSitemap();
-    response.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
-    response.end(sitemap);
+    sendText(request, response, 'application/xml; charset=utf-8', createSitemap(), 'public, max-age=3600');
     return;
   }
 
@@ -546,8 +783,7 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (requestUrl.pathname === '/' || requestUrl.pathname === '/index.html') {
-    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    fs.createReadStream(path.join(__dirname, 'index.html')).pipe(response);
+    sendText(request, response, 'text/html; charset=utf-8', renderHomepage(), 'public, max-age=0, must-revalidate');
     return;
   }
 

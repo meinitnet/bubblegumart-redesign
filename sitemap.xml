@@ -5,5 +5,11 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <url>
+    <loc>https://bubblegumart.de/impressum/</loc>
+  </url>
+  <url>
+    <loc>https://bubblegumart.de/datenschutz/</loc>
+  </url>
 </urlset>
 
