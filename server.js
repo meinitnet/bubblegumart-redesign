@@ -594,14 +594,31 @@ function createSitemap() {
     .filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
     .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${item.altText ? `\n      <image:title>${escapeXml(item.altText)}</image:title>` : ''}\n    </image:image>`)
     .join('\n');
+  const videoEntries = media
+    .filter((item) => hasStoredVideo(item.videoUrl))
+    .slice(0, 24)
+    .map((item) => `    <video:video>\n      <video:thumbnail_loc>${escapeXml(`${siteUrl}${item.thumbnailUrl || item.imageUrl}`)}</video:thumbnail_loc>\n      <video:title>${escapeXml((item.altText || 'Tattoo-Reel von Tschiggys Bubblegum Art').slice(0, 100))}</video:title>\n      <video:description>${escapeXml((item.altText || 'Tattoo-Reel aus dem Studio Bubblegum Art in Hamburg').slice(0, 2048))}</video:description>\n      <video:content_loc>${escapeXml(`${siteUrl}${item.videoUrl}`)}</video:content_loc>${item.timestamp ? `\n      <video:publication_date>${escapeXml(item.timestamp)}</video:publication_date>` : ''}\n    </video:video>`)
+    .join('\n');
+  const fileDate = (file) => fs.statSync(path.join(__dirname, file)).mtime.toISOString().slice(0, 10);
+  const latestDate = (items, fallbackFile) => {
+    const times = items.map((item) => Date.parse(item.timestamp)).filter(Number.isFinite);
+    return times.length ? new Date(Math.max(...times)).toISOString().slice(0, 10) : fileDate(fallbackFile);
+  };
+  const lastmods = {
+    '/': latestDate(media, 'index.html'),
+    '/portfolio/': latestDate(media.filter((item) => item.isTattooPortfolio), 'subpages.js'),
+    '/videos/': latestDate(media.filter((item) => hasStoredVideo(item.videoUrl)), 'subpages.js'),
+  };
+  const lastmodFor = (pathname) => lastmods[pathname] || fileDate(legalPages.get(pathname) || 'subpages.js');
   const legalEntries = [...Object.keys(subpages), ...legalPages.keys()]
-    .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n  </url>`)
+    .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n    <lastmod>${lastmodFor(pathname)}</lastmod>${pathname === '/videos/' && videoEntries ? `\n${videoEntries}` : ''}\n  </url>`)
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
     <loc>${escapeXml(`${siteUrl}/`)}</loc>
+    <lastmod>${lastmods['/']}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>${imageEntries ? `\n${imageEntries}` : ''}
   </url>
@@ -943,7 +960,8 @@ const server = http.createServer(async (request, response) => {
 
   if (subpages[requestUrl.pathname]) {
     try {
-      const media = (await getInstagramMedia()).filter((item) => item.imageUrl?.startsWith('/instagram-media/'));
+      const media = (await getInstagramMedia()).filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
+        .map((item) => (hasStoredVideo(item.videoUrl) ? item : { ...item, videoUrl: undefined }));
       const html = renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: extractCss() });
       sendText(request, response, 'text/html; charset=utf-8', minifyHtml(html), 'public, max-age=0, must-revalidate');
     } catch (error) {
@@ -1035,6 +1053,9 @@ const server = http.createServer(async (request, response) => {
       'Cache-Control': 'public, max-age=31536000, immutable',
       'Accept-Ranges': 'bytes',
     };
+    if (requestUrl.searchParams.has('download') && path.extname(filename).toLowerCase() === '.mp4') {
+      headers['Content-Disposition'] = `attachment; filename="${filename.replace(/"/g, '')}"`;
+    }
     const size = fs.statSync(filePath).size;
     const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.range || '');
     if (range && (range[1] || range[2])) {
@@ -1082,8 +1103,8 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-  response.end('Nicht gefunden');
+  const notFoundHtml = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Seite nicht gefunden | Bubblegum Art Tattoo Hamburg</title><meta name="robots" content="noindex"><link rel="icon" href="/favicon.ico" sizes="any"><style>body{font-family:Inter,system-ui,sans-serif;text-align:center;padding:15vh 20px;color:#333}h1{font-size:2rem;margin-bottom:12px}a{color:#ff6b6b;font-weight:600}</style></head><body><h1>Diese Seite gibt es nicht</h1><p>Die Seite wurde nicht gefunden. Hier geht es weiter:</p><p><a href="/">Startseite</a> · <a href="/styles/">Styles</a> · <a href="/portfolio/">Portfolio</a> · <a href="/videos/">Videos</a> · <a href="/kontakt/">Kontakt</a></p></body></html>`;
+  sendText(request, response, 'text/html; charset=utf-8', notFoundHtml, 'no-store', 404);
 });
 
 async function startServer() {

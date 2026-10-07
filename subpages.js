@@ -5,6 +5,7 @@ const nav = [
   ['/#instagram', 'Instagram', 'nav-instagram'],
   ['/styles/', 'Styles', 'nav-styles'],
   ['/portfolio/', 'Portfolio', 'nav-gallery'],
+  ['/videos/', 'Videos', 'nav-videos'],
   ['/kontakt/', 'Kontakt', 'nav-contact'],
 ];
 
@@ -32,6 +33,14 @@ const pages = {
     intro: 'Eine Auswahl aktueller Arbeiten aus dem Studio in Hamburg-Eimsbüttel.',
     crumb: 'Portfolio',
   },
+  '/videos/': {
+    key: 'videos',
+    title: 'Tattoo Videos & Reels Hamburg: Comic, Sketch & Newschool | Bubblegum Art',
+    description: 'Tattoo Videos und Reels aus Hamburg-Eimsbüttel: live aus dem Studio von Tschiggy bis zum fertigen Tattoo. Comic, Sketch, Newschool und Custom. Jetzt ansehen.',
+    h1: 'Tattoo Videos & Reels',
+    intro: 'Live aus dem Studio von Tschiggy bis zum fertigen Tattoo – Comic, Sketch, Newschool und Custom in Bewegung aus Hamburg-Eimsbüttel.',
+    crumb: 'Videos',
+  },
   '/kontakt/': {
     key: 'contact',
     title: 'Kontakt & Termin | Tattoostudio Bubblegum Art Hamburg',
@@ -56,6 +65,15 @@ const extraCss = `
 .bw3-root .bw3-style-card, .bw3-root .bw3-gallery-item, .bw3-root .bw3-contact-card { opacity: 1; transform: none; }
 .bw3-root .bw3-gallery-item { aspect-ratio: 1; }
 .bw3-root .bw3-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bw3-video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+.bw3-video-item { margin: 0; }
+.bw3-video-item video { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; background: #000; display: block; }
+.bw3-video-item figcaption { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+.bw3-video-item figcaption a { display: block; color: var(--bubble-coral); font-weight: 600; margin-top: 4px; }
+.bw3-video-text { max-width: 760px; margin: 40px auto 0; }
+.bw3-video-text h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
+.bw3-video-text p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 12px; }
+.bw3-video-text a { color: var(--bubble-coral); font-weight: 600; }
 .bw3-page-min { min-height: 100vh; }
 .bw3-style-card h2 { font-size: 19px; font-weight: 600; margin-bottom: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
 .bw3-contact-card h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
@@ -110,6 +128,32 @@ function renderSubpage(pathname, ctx) {
         })),
       });
     }
+  } else if (page.key === 'videos') {
+    const items = media.filter((item) => item.videoUrl).slice(0, 24);
+    body = items.length
+      ? `<div class="bw3-video-grid">${items.map((item) => {
+        const altText = e(item.altText || 'Tattoo-Reel von Tschiggys Bubblegum Art');
+        return `<figure class="bw3-video-item"><video controls preload="none" playsinline poster="${e(item.thumbnailUrl || item.imageUrl)}" src="${e(item.videoUrl)}"></video><figcaption>${altText}<a href="${e(item.videoUrl)}?download=1" download>MP4 herunterladen</a></figcaption></figure>`;
+      }).join('')}</div>`
+      : '<p class="bw3-section-sub">Aktuelle Reels findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
+    body += `<div class="bw3-video-text">
+      <h2>Tattoo Reels aus dem Studio in Hamburg</h2>
+      <p>Von Live-Momenten direkt von Tschiggy aus dem Studio in Hamburg-Eimsbüttel, nahe der Sternschanze, bis zum fertig gestochenen Tattoo: Hier siehst du alles in Bewegung. Beim Stechen, beim Entwurf, im Studioalltag und am Ende das Ergebnis – bunte Comic- und Cartoon-Tattoos, feine Sketch-Linien, verspielte Newschool-Designs und Custom-Tattoos nach deiner Idee.</p>
+      <p>Die Reels zeigen, wie die Farben und Linien auf der Haut wirken, und geben dir einen echten Eindruck vom Stil, bevor du dein Tattoo in Hamburg planst. Jedes Reel kannst du als MP4 herunterladen und für dein Moodboard speichern.</p>
+      <p>Mehr Motive findest du im <a href="/portfolio/">Portfolio</a>, alle Stilrichtungen auf der Seite <a href="/styles/">Tattoo Styles</a>. Du hast schon eine Idee? Dann <a href="/kontakt/">frag deinen Termin an</a> – deine Idee, meine Interpretation.</p>
+    </div>
+    <p class="bw3-page-more"><a href="/portfolio/">Zum Portfolio →</a> · <a href="/styles/">Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>`;
+    items.forEach((item) => {
+      graphExtra.push({
+        '@type': 'VideoObject',
+        name: item.altText || 'Tattoo-Reel von Tschiggys Bubblegum Art',
+        description: item.altText || page.description,
+        thumbnailUrl: `${siteUrl}${item.thumbnailUrl || item.imageUrl}`,
+        contentUrl: `${siteUrl}${item.videoUrl}`,
+        uploadDate: item.timestamp || undefined,
+        creator: { '@id': `${siteUrl}/#studio` },
+      });
+    });
   } else {
     body = `<div class="bw3-contact-grid">
       <a class="bw3-contact-card" href="mailto:tschiggys@bubblegumart.de"><div class="bw3-contact-icon" style="--icon-bg: rgba(78,205,196,0.12); --icon-color: #4ecdc4;">${mailIcon}</div><h2>E-Mail</h2><p>tschiggys@bubblegumart.de</p></a>
@@ -123,7 +167,7 @@ function renderSubpage(pathname, ctx) {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': page.key === 'contact' ? 'ContactPage' : page.key === 'gallery' ? 'CollectionPage' : 'WebPage',
+        '@type': page.key === 'contact' ? 'ContactPage' : page.key === 'gallery' || page.key === 'videos' ? 'CollectionPage' : 'WebPage',
         '@id': `${url}#webpage`,
         url,
         name: page.h1,
