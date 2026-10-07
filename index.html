@@ -777,6 +777,9 @@
       display: flex;
       opacity: 1;
     }
+    .bw3-play { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .bw3-ig-item, .bw3-gallery-item { position: relative; }
+    .bw3-lightbox video { max-width: 90%; max-height: 80vh; border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
     .bw3-lightbox img {
       max-width: 90%;
       max-height: 80vh;
@@ -1005,6 +1008,7 @@
   <div class="bw3-lightbox" id="lightbox" onclick="closeLightbox()" aria-hidden="true">
     <button class="bw3-lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&#215;</button>
     <img id="lightboxImg" src="" alt="">
+    <video id="lightboxVideo" controls playsinline loop hidden onclick="event.stopPropagation()"></video>
   </div>
 </div>
 
@@ -1294,9 +1298,13 @@
       .trim();
   }
 
+  function getImageAlt(image) {
+    return String(image.altText || '').trim() || 'Instagram-Beitrag von Tschiggy';
+  }
+
   function renderInstagramMedia(media) {
     currentMedia = media;
-    portfolioMedia = shuffleMedia(media);
+    portfolioMedia = shuffleMedia(media.filter((item) => item.isTattooPortfolio));
     instagramPage = 1;
     galleryPage = 1;
     renderMediaPages();
@@ -1323,10 +1331,10 @@
       div.href = img.imageUrl;
       div.addEventListener('click', (event) => {
         event.preventDefault();
-        openLightbox(img.imageUrl, cleanCaption(img.caption));
+        openLightbox(img.imageUrl, getImageAlt(img), img.videoUrl);
       });
       div.innerHTML = `
-        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(cleanCaption(img.caption))}" loading="lazy" decoding="async">
+        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(getImageAlt(img))}" loading="lazy" decoding="async">${img.videoUrl ? '<span class="bw3-play" aria-label="Reel abspielen">&#9654;</span>' : ''}
         <div class="bw3-ig-overlay">
           <span>&#9829; ${img.likes}</span>
           <span>&#128172; ${img.comments}</span>
@@ -1343,11 +1351,11 @@
       div.href = img.imageUrl;
       div.addEventListener('click', (event) => {
         event.preventDefault();
-        openLightbox(img.imageUrl, cleanCaption(img.caption));
+        openLightbox(img.imageUrl, getImageAlt(img), img.videoUrl);
       });
       div.innerHTML = `
-        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(cleanCaption(img.caption))}" loading="lazy" decoding="async">
-        <div class="bw3-gallery-caption">${escapeHtml(cleanCaption(img.caption))}</div>
+        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(getImageAlt(img))}" loading="lazy" decoding="async">${img.videoUrl ? '<span class="bw3-play" aria-label="Reel abspielen">&#9654;</span>' : ''}
+        <div class="bw3-gallery-caption">${escapeHtml(getImageAlt(img))}</div>
       `;
       galleryGrid.appendChild(div);
     });
@@ -1454,11 +1462,20 @@
     }
   }
 
-  function openLightbox(src, alt = '') {
+  function openLightbox(src, alt = '', videoSrc = '') {
     const lightbox = document.getElementById('lightbox');
     const image = document.getElementById('lightboxImg');
-    image.src = src;
-    image.alt = alt;
+    const video = document.getElementById('lightboxVideo');
+    image.hidden = Boolean(videoSrc);
+    video.hidden = !videoSrc;
+    if (videoSrc) {
+      video.poster = src;
+      video.src = videoSrc;
+      video.play().catch(() => {});
+    } else {
+      image.src = src;
+      image.alt = alt;
+    }
     lightbox.classList.add('active');
     lightbox.setAttribute('aria-hidden', 'false');
   }
@@ -1467,6 +1484,10 @@
     lightbox.classList.remove('active');
     lightbox.setAttribute('aria-hidden', 'true');
     document.getElementById('lightboxImg').removeAttribute('src');
+    const video = document.getElementById('lightboxVideo');
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
   }
 
   document.addEventListener('keydown', (event) => {

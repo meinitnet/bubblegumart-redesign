@@ -113,3 +113,10 @@ Neue Beitraege werden alle 15 Minuten bei Instagram abgefragt. Bilddateien
 werden beim ersten Abruf im `MEDIA_CACHE_DIR` gespeichert und danach lokal mit
 einem Browser-Cache von einem Jahr ausgeliefert. Falls Instagram nicht
 erreichbar ist, liefert der Server den zuletzt gespeicherten Feed aus.
+
+Portfolio-Bilder werden aus Hashtags mit bekannten Tattoo-Motiven und
+Tattoo-Kontexten ausgewaehlt. Daraus erzeugt der Server beschreibende
+Alt-Texte wie `Tattoo von Tschiggy mit einem Anker im Bubblegum-Art-Stil` und
+verwendet die gleichen Motive fuer neue Bilddateinamen. Der Instagram-Caption
+bleibt unveraendert. `media.json` und heruntergeladene Medien sind Laufzeit-
+Cache und werden nicht ins Repository eingecheckt.

@@ -64,7 +64,7 @@ const extraCss = `
 function renderSubpage(pathname, ctx) {
   const page = pages[pathname];
   if (!page) return null;
-  const { siteUrl, escape, cleanCaption, media, css } = ctx;
+  const { siteUrl, escape, media, css } = ctx;
   const url = `${siteUrl}${pathname}`;
   const logo = `${siteUrl}/storage/img/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp`;
   const e = escape;
@@ -81,11 +81,11 @@ function renderSubpage(pathname, ctx) {
       </article>`).join('')}</div>
       <p class="bw3-page-more"><a href="/portfolio/">Beispiele im Portfolio ansehen →</a> · <a href="/kontakt/">Termin anfragen →</a></p>`;
   } else if (page.key === 'gallery') {
-    const items = media.slice(0, 48);
+    const items = media.filter((item) => item.isTattooPortfolio).slice(0, 48);
     body = items.length
       ? `<div class="bw3-gallery" id="galleryGrid">${items.map((item) => {
-        const caption = e(cleanCaption(item.caption));
-        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${caption || 'Tattoo von Tschiggys Bubblegum Art'}" width="320" height="320" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${caption}</div></a>`;
+        const altText = e(item.altText || 'Tattoo von Tschiggys Bubblegum Art');
+        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
       }).join('')}</div>`
       : '<p class="bw3-section-sub">Aktuelle Arbeiten findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
     body += '<p class="bw3-page-more"><a href="/styles/">Alle Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>';
@@ -100,8 +100,8 @@ function renderSubpage(pathname, ctx) {
           '@type': 'ImageObject',
           contentUrl: `${siteUrl}${item.imageUrl}`,
           thumbnailUrl: `${siteUrl}${item.thumbnailUrl || item.imageUrl}`,
-          name: cleanCaption(item.caption) || 'Tattoo von Tschiggys Bubblegum Art',
-          caption: cleanCaption(item.caption) || undefined,
+          name: item.altText || 'Tattoo von Tschiggys Bubblegum Art',
+          caption: item.altText || undefined,
           uploadDate: item.timestamp || undefined,
           creator: { '@id': `${siteUrl}/#studio` },
           creditText: 'Tschiggys Bubblegum Art Tattoo',

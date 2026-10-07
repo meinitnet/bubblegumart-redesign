@@ -67,6 +67,7 @@ const localFonts = [
 const debugEnabled = /^(1|true|yes)$/i.test(process.env.DEBUG || '');
 const imageDownloadConcurrency = 6;
 const thumbnailWidth = 320;
+const maxVideoBytes = 150 * 1024 * 1024;
 let mediaCache = { value: readStoredMedia(), expiresAt: 0 };
 let mediaRefreshPromise = null;
 let profileCache = { value: readStoredProfile(), expiresAt: 0 };
@@ -106,7 +107,7 @@ function readStoredMedia() {
   try {
     const storedMedia = JSON.parse(fs.readFileSync(mediaIndexPath, 'utf8'));
     return Array.isArray(storedMedia)
-      ? storedMedia.map((item) => ({ ...item, caption: cleanCaption(item.caption) }))
+      ? deduplicateMedia(storedMedia.map(enrichMediaItem))
       : null;
   } catch {
     return null;
@@ -118,6 +119,160 @@ function cleanCaption(caption) {
     .replace(/[\p{Extended_Pictographic}\uFE0F\u200D\u{1F3FB}-\u{1F3FF}\u20E3]/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+const tattooContextTags = new Set([
+  'tat', 'tatoo', 'tattoo', 'tattoos', 'tattooed', 'tatt', 'tats', 'tatts',
+  'ink', 'inked', 'inkd', 'inkedup', 'inkstagram', 'instatattoo',
+  'tätowierung', 'tatouage', 'comictattoo', 'cutetattoo', 'colourtattoo',
+  'colortattoo', 'freshtattoo', 'flashtattoo', 'flash', 'wannado',
+  'wannadotattoo', 'hamburgtattoo', 'tattoohamburg', 'hamburgtattooers',
+  'hamburgtattoostudio', 'germantattooers', 'femaletattooartist',
+  'ladytattooers', 'mydrawing', 'comicart', 'comicartist', 'bodyart',
+]);
+
+const tattooSubjects = {
+  'französischebulldogge': 'einer französischen Bulldogge',
+  franchbulldog: 'einer französischen Bulldogge',
+  pug: 'einem Mops',
+  anker: 'einem Anker',
+  anchor: 'einem Anker',
+  ankertattoo: 'einem Anker',
+  anchortattoo: 'einem Anker',
+  ente: 'einer Ente',
+  duck: 'einer Ente',
+  eule: 'einer Eule',
+  owl: 'einer Eule',
+  katze: 'einer Katze',
+  cat: 'einer Katze',
+  katzentattoo: 'einer Katze',
+  cattattoo: 'einer Katze',
+  hund: 'einem Hund',
+  dog: 'einem Hund',
+  dogtattoo: 'einem Hund',
+  dachs: 'einem Dachs',
+  dachshund: 'einem Dackel',
+  rose: 'einer Rose',
+  rosen: 'Rosen',
+  rosetattoo: 'einer Rose',
+  flamingo: 'einem Flamingo',
+  hai: 'einem Hai',
+  shark: 'einem Hai',
+  elefant: 'einem Elefanten',
+  elephant: 'einem Elefanten',
+  meerjungfrau: 'einer Meerjungfrau',
+  mermaid: 'einer Meerjungfrau',
+  krone: 'einer Krone',
+  crown: 'einer Krone',
+  schmetterling: 'einem Schmetterling',
+  butterfly: 'einem Schmetterling',
+  einhorn: 'einem Einhorn',
+  unicorn: 'einem Einhorn',
+  möwe: 'einer Möwe',
+  seagull: 'einer Möwe',
+  fledermaus: 'einer Fledermaus',
+  bat: 'einer Fledermaus',
+  dino: 'einem Dinosaurier',
+  dinosaur: 'einem Dinosaurier',
+  wal: 'einem Wal',
+  whale: 'einem Wal',
+  seepferdchen: 'einem Seepferdchen',
+  seahorse: 'einem Seepferdchen',
+  fisch: 'einem Fisch',
+  fish: 'einem Fisch',
+  kaktus: 'einem Kaktus',
+  cactus: 'einem Kaktus',
+  kompass: 'einem Kompass',
+  compass: 'einem Kompass',
+  skull: 'einem Totenkopf',
+  scull: 'einem Totenkopf',
+  totenkopf: 'einem Totenkopf',
+  'sugarskull': 'einem Zuckerschädel',
+  'girlskull': 'einem weiblichen Totenkopf',
+  papierboot: 'einem Papierboot',
+  lighthouse: 'einem Leuchtturm',
+  leuchtturm: 'einem Leuchtturm',
+  bettyboop: 'Betty Boop',
+  hellokitty: 'Hello Kitty',
+  minnienouse: 'Minnie Mouse',
+  minniemouse: 'Minnie Mouse',
+  'mickeymouse': 'Mickey Mouse',
+  'popeye': 'Popeye',
+  'darthvader': 'Darth Vader',
+  'aliceinwonderland': 'Alice im Wunderland',
+  'aliceimwunderland': 'Alice im Wunderland',
+  snowwhite: 'Schneewittchen',
+  schneewittchen: 'Schneewittchen',
+  'littleshopofhorrors': 'einem Motiv aus Little Shop of Horrors',
+  glumanda: 'Glumanda',
+  minion: 'einem Minion',
+  'oscar': 'Oscar aus der Sesamstraße',
+  'oscardergrouch': 'Oscar aus der Sesamstraße',
+  carebears: 'einem Glücksbärchi',
+  glücksbärchi: 'einem Glücksbärchi',
+  'jack&sally': 'Jack und Sally',
+  'nightmarebeforechristmas': 'Jack und Sally',
+  'lacatrina': 'La Catrina',
+  mexicanskull: 'einem mexikanischen Zuckerschädel',
+};
+
+function normalizeTag(tag) {
+  return String(tag || '').toLowerCase().replace(/^#/, '').trim();
+}
+
+function getHashtags(caption) {
+  return [...String(caption || '').matchAll(/#[\p{L}\p{N}_-]+/gu)].map((match) => normalizeTag(match[0]));
+}
+
+function getTattooSubjects(caption) {
+  return [...new Set(getHashtags(caption).map((tag) => tattooSubjects[tag]).filter(Boolean))];
+}
+
+function isTattooDesign(caption) {
+  return getHashtags(caption).some((tag) => ['flash', 'flashtattoo', 'mydrawing', 'wannado', 'wannadotattoo'].includes(tag));
+}
+
+function stripHashtags(caption) {
+  return cleanCaption(caption)
+    .replace(/#[\p{L}\p{N}_-]+/gu, '')
+    .replace(/@\w+/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function createAltText(item, subjects = getTattooSubjects(item.caption)) {
+  if (subjects.length) {
+    const type = isTattooDesign(item.caption) ? 'Tattoo-Entwurf' : 'Tattoo';
+    return `${type} von Tschiggy mit ${subjects.slice(0, 2).join(' und ')} im Bubblegum-Art-Stil`;
+  }
+
+  return stripHashtags(item.caption) || 'Instagram-Beitrag von Tschiggy';
+}
+
+function isTattooPortfolioItem(item, subjects = getTattooSubjects(item.caption)) {
+  const tags = new Set(getHashtags(item.caption));
+  const hasTattooContext = [...tags].some((tag) => tattooContextTags.has(tag));
+  return hasTattooContext && subjects.length > 0;
+}
+
+function enrichMediaItem(item) {
+  const subjects = getTattooSubjects(item.caption);
+  return {
+    ...item,
+    caption: cleanCaption(item.caption),
+    altText: createAltText(item, subjects),
+    isTattooPortfolio: isTattooPortfolioItem(item, subjects),
+  };
+}
+
+function deduplicateMedia(media) {
+  const seen = new Set();
+  return media.filter((item) => {
+    const key = item.id || item.imageUrl;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function readStoredProfile() {
@@ -217,28 +372,92 @@ function captionSlug(caption) {
   return words.join('-') || 'tattoo';
 }
 
+function mediaSlug(item) {
+  const subjects = getTattooSubjects(item.caption);
+  if (subjects.length) {
+    return `tattoo-${subjects
+      .slice(0, 2)
+      .join('-')
+      .replace(/^(einem|einer|eines)\s+/g, '')
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')}`;
+  }
+  return captionSlug(stripHashtags(item.caption));
+}
+
 function findStoredFile(id) {
   const idPattern = new RegExp(`-${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.[a-z0-9]+$`);
   return fs.readdirSync(mediaDirectory, { withFileTypes: true })
     .find((entry) => entry.isFile() && idPattern.test(entry.name));
 }
 
-async function storeImage(id, remoteUrl, caption) {
+async function storeImage(id, remoteUrl, item) {
   const existingFile = findStoredFile(id);
   if (existingFile) {
+    const filename = `${mediaSlug(item)}-${id}${path.extname(existingFile.name)}`;
+    if (existingFile.name !== filename) {
+      const existingPath = path.join(mediaDirectory, existingFile.name);
+      const targetPath = path.join(mediaDirectory, filename);
+      if (!fs.existsSync(targetPath)) {
+        fs.renameSync(existingPath, targetPath);
+        const oldThumbnail = path.join(mediaDirectory, `${path.parse(existingFile.name).name}-thumb.webp`);
+        const newThumbnail = path.join(mediaDirectory, `${path.parse(filename).name}-thumb.webp`);
+        if (fs.existsSync(oldThumbnail) && !fs.existsSync(newThumbnail)) {
+          fs.renameSync(oldThumbnail, newThumbnail);
+        }
+        debugLog(`Bild ${id}: Dateiname aktualisiert (${filename})`);
+      }
+    }
     debugLog(`Bild ${id}: Cache-Treffer (${existingFile.name})`);
-    return `/instagram-media/${existingFile.name}`;
+    return `/instagram-media/${fs.existsSync(path.join(mediaDirectory, filename)) ? filename : existingFile.name}`;
   }
 
   const response = await fetch(remoteUrl);
   debugLog(`Bild ${id}: Download ${response.status} ${response.statusText}`);
   if (!response.ok) throw new Error(`Bild ${id} konnte nicht gespeichert werden.`);
 
-  const filename = `${captionSlug(caption)}-${id}${imageExtension(response.headers.get('content-type'))}`;
+  const filename = `${mediaSlug(item)}-${id}${imageExtension(response.headers.get('content-type'))}`;
   const image = Buffer.from(await response.arrayBuffer());
   fs.writeFileSync(path.join(mediaDirectory, filename), image);
   debugLog(`Bild ${id}: gespeichert als ${filename} (${image.length} Bytes)`);
   return `/instagram-media/${filename}`;
+}
+
+function hasStoredVideo(videoUrl) {
+  if (!videoUrl?.startsWith('/instagram-media/')) return false;
+  return fs.existsSync(path.join(mediaDirectory, path.basename(videoUrl)));
+}
+
+async function storeVideo(id, remoteUrl, item) {
+  const filename = `${mediaSlug(item)}-${id}-video.mp4`;
+  const existing = fs.readdirSync(mediaDirectory).find((name) => name.endsWith(`-${id}-video.mp4`));
+  if (existing) return `/instagram-media/${existing}`;
+
+  const response = await fetch(remoteUrl);
+  if (!response.ok) throw new Error(`Video ${id} konnte nicht geladen werden (${response.status}).`);
+  if (Number(response.headers.get('content-length')) > maxVideoBytes) throw new Error(`Video ${id} ist zu gross.`);
+
+  const video = Buffer.from(await response.arrayBuffer());
+  if (video.length > maxVideoBytes) throw new Error(`Video ${id} ist zu gross.`);
+  const target = path.join(mediaDirectory, filename);
+  fs.writeFileSync(`${target}.tmp`, video);
+  fs.renameSync(`${target}.tmp`, target);
+  debugLog(`Video ${id}: gespeichert als ${filename} (${video.length} Bytes)`);
+  return `/instagram-media/${filename}`;
+}
+
+async function addVideo(item, remoteVideoUrl) {
+  if (item.mediaType !== 'VIDEO' || hasStoredVideo(item.videoUrl)) return item;
+  if (!remoteVideoUrl) return item;
+  try {
+    return { ...item, videoUrl: await storeVideo(item.id, remoteVideoUrl, item) };
+  } catch (error) {
+    debugLog(`Video ${item.id}: ${error.message}`);
+    return item;
+  }
 }
 
 async function createThumbnail(imageUrl, force = false) {
@@ -316,7 +535,7 @@ async function mapWithConcurrency(items, limit, mapper) {
 }
 
 function persistMedia(media) {
-  fs.writeFileSync(mediaIndexPath, JSON.stringify(media));
+  fs.writeFileSync(mediaIndexPath, JSON.stringify(deduplicateMedia(media.map(enrichMediaItem))));
 }
 
 function escapeXml(value) {
@@ -332,7 +551,7 @@ function createSitemap() {
   const media = mediaCache.value || readStoredMedia() || [];
   const imageEntries = media
     .filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
-    .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${cleanCaption(item.caption) ? `\n      <image:title>${escapeXml(cleanCaption(item.caption))}</image:title>` : ''}\n    </image:image>`)
+    .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${item.altText ? `\n      <image:title>${escapeXml(item.altText)}</image:title>` : ''}\n    </image:image>`)
     .join('\n');
   const legalEntries = [...Object.keys(subpages), ...legalPages.keys()]
     .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n  </url>`)
@@ -413,10 +632,12 @@ async function refreshInstagramMedia(loadAllPages) {
   const fetchedMedia = await fetchInstagramMediaPages(url, loadAllPages ? Infinity : 1);
   const remoteMedia = fetchedMedia
     .filter((item) => item.media_type !== 'VIDEO' || item.thumbnail_url)
-    .map((item) => ({
+    .map((item) => enrichMediaItem({
       id: item.id,
       caption: cleanCaption(item.caption || 'Tattoo von @tschiggys'),
       imageUrl: item.media_type === 'VIDEO' ? item.thumbnail_url : item.media_url,
+      mediaType: item.media_type,
+      remoteVideoUrl: item.media_type === 'VIDEO' ? item.media_url : undefined,
       permalink: item.permalink,
       likes: item.like_count ?? 0,
       comments: item.comments_count ?? 0,
@@ -428,14 +649,15 @@ async function refreshInstagramMedia(loadAllPages) {
   const existingMedia = new Map((mediaCache.value || []).map((item) => [item.id, item]));
   let downloadedCount = 0;
   const refreshedMedia = await mapWithConcurrency(remoteMedia, imageDownloadConcurrency, async (item) => {
+    const { remoteVideoUrl, ...publicItem } = item;
     const existingItem = existingMedia.get(item.id);
     if (existingItem && hasStoredImage(existingItem.imageUrl)) {
-      return addThumbnail({ ...existingItem, ...item, imageUrl: existingItem.imageUrl });
+      return addVideo(await addThumbnail({ ...existingItem, ...publicItem, imageUrl: existingItem.imageUrl }), remoteVideoUrl);
     }
     downloadedCount += 1;
     try {
-      const imageUrl = await storeImage(item.id, item.imageUrl, item.caption);
-      return addThumbnail({ ...item, imageUrl });
+      const imageUrl = await storeImage(item.id, item.imageUrl, item);
+      return addVideo(await addThumbnail({ ...publicItem, imageUrl }), remoteVideoUrl);
     } catch (error) {
       debugLog(`Bild ${item.id}: Download fehlgeschlagen: ${error.message}`);
       throw error;
@@ -444,7 +666,7 @@ async function refreshInstagramMedia(loadAllPages) {
 
   const refreshedIds = new Set(refreshedMedia.map((item) => item.id));
   const olderMedia = (mediaCache.value || []).filter((item) => !refreshedIds.has(item.id));
-  const media = [...refreshedMedia, ...olderMedia];
+  const media = deduplicateMedia([...refreshedMedia, ...olderMedia].map(enrichMediaItem));
   mediaCache = { value: media, expiresAt: Date.now() + cacheLifetimeMs };
   persistMedia(media);
   debugLog(`Instagram: Refresh abgeschlossen (${downloadedCount} neue Downloads, ${media.length} lokale Medien)`);
@@ -503,7 +725,7 @@ function sendJson(request, response, statusCode, value) {
 
 const compressedBodies = new Map();
 
-function sendText(request, response, contentType, body, cacheControl) {
+function sendText(request, response, contentType, body, cacheControl, statusCode = 200) {
   const etag = `"${crypto.createHash('sha1').update(body).digest('base64url')}"`;
   const headers = { 'Content-Type': contentType, 'Cache-Control': cacheControl, ETag: etag, Vary: 'Accept-Encoding' };
 
@@ -523,11 +745,11 @@ function sendText(request, response, contentType, body, cacheControl) {
   const accepted = request.headers['accept-encoding'] || '';
   const encoding = /\bbr\b/.test(accepted) ? 'br' : /\bgzip\b/.test(accepted) ? 'gzip' : null;
   if (!encoding) {
-    response.writeHead(200, headers);
+    response.writeHead(statusCode, headers);
     response.end(body);
     return;
   }
-  response.writeHead(200, { ...headers, 'Content-Encoding': encoding });
+  response.writeHead(statusCode, { ...headers, 'Content-Encoding': encoding });
   response.end(variants[encoding]);
 }
 
@@ -559,9 +781,9 @@ function minifyHtml(html) {
   return result;
 }
 
-function renderHomepage() {
-  const media = (mediaCache.value || readStoredMedia() || [])
-    .filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
+function renderHomepage(mediaSource) {
+  const media = (mediaSource || mediaCache.value || readStoredMedia() || [])
+    .filter((item) => item.imageUrl?.startsWith('/instagram-media/') && item.isTattooPortfolio)
     .slice(0, 12);
   const logoImage = absoluteUrl('/storage/img/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp');
 
@@ -569,8 +791,8 @@ function renderHomepage() {
     '@type': 'ImageObject',
     contentUrl: absoluteUrl(item.imageUrl),
     thumbnailUrl: absoluteUrl(item.thumbnailUrl || item.imageUrl),
-    name: cleanCaption(item.caption) || 'Tattoo von Tschiggys Bubblegum Art',
-    caption: cleanCaption(item.caption) || undefined,
+    name: item.altText,
+    caption: item.altText,
     uploadDate: item.timestamp || undefined,
     creator: { '@id': `${siteUrl}/#studio` },
     creditText: 'Tschiggys Bubblegum Art Tattoo',
@@ -639,9 +861,9 @@ function renderHomepage() {
   };
 
   const galleryItems = media.slice(0, 8).map((item, index) => {
-    const caption = escapeXml(cleanCaption(item.caption));
+    const caption = escapeXml(item.altText);
     const variant = index === 1 ? ' tall' : index === 3 ? ' wide' : '';
-    return `<a class="bw3-gallery-item${variant}" href="${escapeXml(item.imageUrl)}"><img src="${escapeXml(item.thumbnailUrl || item.imageUrl)}" alt="${caption || 'Tattoo von Tschiggys Bubblegum Art'}" width="${thumbnailWidth}" height="${thumbnailWidth}" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${caption}</div></a>`;
+    return `<a class="bw3-gallery-item${variant}" href="${escapeXml(item.imageUrl)}"><img src="${escapeXml(item.thumbnailUrl || item.imageUrl)}" alt="${caption}" width="${thumbnailWidth}" height="${thumbnailWidth}" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${caption}</div></a>`;
   }).join('');
 
   const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');
@@ -679,9 +901,14 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (subpages[requestUrl.pathname]) {
-    const media = (mediaCache.value || readStoredMedia() || []).filter((item) => item.imageUrl?.startsWith('/instagram-media/'));
-    const html = renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: extractCss() });
-    sendText(request, response, 'text/html; charset=utf-8', minifyHtml(html), 'public, max-age=0, must-revalidate');
+    try {
+      const media = (await getInstagramMedia()).filter((item) => item.imageUrl?.startsWith('/instagram-media/'));
+      const html = renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: extractCss() });
+      sendText(request, response, 'text/html; charset=utf-8', minifyHtml(html), 'public, max-age=0, must-revalidate');
+    } catch (error) {
+      debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
+      sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
+    }
     return;
   }
 
@@ -730,7 +957,13 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (requestUrl.pathname === '/sitemap.xml') {
-    sendText(request, response, 'application/xml; charset=utf-8', createSitemap(), 'public, max-age=3600');
+    try {
+      await getInstagramMedia();
+      sendText(request, response, 'application/xml; charset=utf-8', createSitemap(), 'public, max-age=3600');
+    } catch (error) {
+      debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
+      sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
+    }
     return;
   }
 
@@ -755,11 +988,27 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    const contentTypes = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
-    response.writeHead(200, {
+    const contentTypes = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.mp4': 'video/mp4' };
+    const headers = {
       'Content-Type': contentTypes[path.extname(filename).toLowerCase()] || 'application/octet-stream',
       'Cache-Control': 'public, max-age=31536000, immutable',
-    });
+      'Accept-Ranges': 'bytes',
+    };
+    const size = fs.statSync(filePath).size;
+    const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.range || '');
+    if (range && (range[1] || range[2])) {
+      const start = range[1] ? Number(range[1]) : Math.max(size - Number(range[2]), 0);
+      const end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      if (start > end || start >= size) {
+        response.writeHead(416, { ...headers, 'Content-Range': `bytes */${size}` });
+        response.end();
+        return;
+      }
+      response.writeHead(206, { ...headers, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': end - start + 1 });
+      fs.createReadStream(filePath, { start, end }).pipe(response);
+      return;
+    }
+    response.writeHead(200, { ...headers, 'Content-Length': size });
     fs.createReadStream(filePath).pipe(response);
     return;
   }
@@ -783,7 +1032,12 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (requestUrl.pathname === '/' || requestUrl.pathname === '/index.html') {
-    sendText(request, response, 'text/html; charset=utf-8', renderHomepage(), 'public, max-age=0, must-revalidate');
+    try {
+      sendText(request, response, 'text/html; charset=utf-8', renderHomepage(await getInstagramMedia()), 'public, max-age=0, must-revalidate');
+    } catch (error) {
+      debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
+      sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
+    }
     return;
   }
 
