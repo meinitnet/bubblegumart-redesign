@@ -3,11 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js",
-    "sync-all": "node server.js --sync-all"
+    "start": "node server.js"
   },
   "dependencies": {
     "esbuild": "^0.28.2",
     "sharp": "^0.35.4"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }
