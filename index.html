@@ -1263,20 +1263,22 @@
     }
   }
 
-  for (let layer = 0; layer < 3; layer++) {
-    const count = layer === 0 ? 12 : layer === 1 ? 8 : 5;
-    for (let i = 0; i < count; i++) {
-      bubbles.push(new SoapBubble(layer));
-    }
-  }
-
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     bubbles.forEach(b => { b.update(); b.draw(); });
     drawPopEffects();
     requestAnimationFrame(animate);
   }
-  animate();
+
+  function startBubbles() {
+    for (let layer = 0; layer < 3; layer++) {
+      const count = layer === 0 ? 12 : layer === 1 ? 8 : 5;
+      for (let i = 0; i < count; i++) {
+        bubbles.push(new SoapBubble(layer));
+      }
+    }
+    animate();
+  }
 
   const igGrid = document.getElementById('igGrid');
   const galleryGrid = document.getElementById('galleryGrid');
@@ -1533,7 +1535,11 @@
   document.querySelectorAll('.bw3-contact-card').forEach(el => revealObserver.observe(el));
 
   loadInstagramMedia();
-  loadInstagramProfile();
+  // Nach dem ersten Paint starten, damit Überschrift und Hero zuerst gezeichnet werden.
+  requestAnimationFrame(() => setTimeout(() => {
+    startBubbles();
+    loadInstagramProfile();
+  }, 0));
 </script>
 
 </body>
