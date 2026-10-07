@@ -820,7 +820,7 @@ function sendText(request, response, contentType, body, cacheControl, statusCode
   let variants = compressedBodies.get(etag);
   if (!variants) {
     if (compressedBodies.size > 50) compressedBodies.clear();
-    variants = { br: zlib.brotliCompressSync(body, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }), gzip: zlib.gzipSync(body, { level: 6 }) };
+    variants = { br: zlib.brotliCompressSync(body), gzip: zlib.gzipSync(body, { level: 9 }) };
     compressedBodies.set(etag, variants);
   }
 
@@ -1015,7 +1015,11 @@ const server = http.createServer(async (request, response) => {
 
   if (requestUrl.pathname === '/api/instagram-media') {
     try {
-      sendJson(request, response, 200, { data: await getInstagramMedia() });
+      sendJson(request, response, 200, {
+        data: (await getInstagramMedia()).map(({ id, imageUrl, thumbnailUrl, videoUrl, altText, likes, comments, isTattooPortfolio }) => (
+          { id, imageUrl, thumbnailUrl, videoUrl, altText, likes, comments, isTattooPortfolio }
+        )),
+      });
       debugLog(`Response: 200 nach ${Date.now() - startedAt} ms`);
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);

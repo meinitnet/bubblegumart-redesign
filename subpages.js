@@ -102,9 +102,10 @@ function renderSubpage(pathname, ctx) {
   } else if (page.key === 'gallery') {
     const items = media.filter((item) => item.isTattooPortfolio);
     body = items.length
-      ? `<div class="bw3-gallery" id="galleryGrid">${items.map((item) => {
+      ? `<div class="bw3-gallery" id="galleryGrid">${items.map((item, index) => {
         const altText = e(item.altText || 'Tattoo von Tschiggys Bubblegum Art');
-        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
+        const first = index < 12;
+        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"${first ? '' : ' hidden'}><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" ${index < 4 ? 'fetchpriority="high"' : first ? '' : 'loading="lazy"'} decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
       }).join('')}</div><div class="bw3-pagination" id="galleryPagination" aria-label="Portfolio-Seiten"></div>`
       : '<p class="bw3-section-sub">Aktuelle Arbeiten findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
     body += '<p class="bw3-page-more"><a href="/styles/">Alle Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>';

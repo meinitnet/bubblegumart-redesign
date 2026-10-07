@@ -2,6 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+<link rel="preload" href="/api/instagram-media" as="fetch" crossorigin="anonymous">
+<link rel="preload" href="/fonts/lobster-400.ttf" as="font" type="font/ttf" crossorigin>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tattoo Hamburg | Tattoostudio für Comic & Newschool | Bubblegum Art</title>
   <meta name="description" content="Tattoostudio in Hamburg für Comic-, Sketch-, Newschool- und Custom-Tattoos. Tschiggys Bubblegum Art Tattoo in Eimsbüttel nahe Sternschanze.">
@@ -1452,7 +1454,7 @@
 
   async function loadInstagramMedia() {
     try {
-      const response = await fetch('/api/instagram-media?refresh=1', { cache: 'no-store' });
+      const response = await fetch('/api/instagram-media');
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error);
       renderInstagramMedia(payload.data);
