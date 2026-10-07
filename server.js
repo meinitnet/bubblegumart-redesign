@@ -64,6 +64,8 @@ const localFonts = [
   { filename: 'inter-600.ttf', url: 'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf' },
   { filename: 'lobster-400.ttf', url: 'https://fonts.gstatic.com/s/lobster/v32/neILzCirqoswsqX9_oU.ttf' },
 ];
+// Lateinische Teilmenge als woff2, im Repo abgelegt (storage/fonts).
+const bundledFonts = ['lobster-400-latin.woff2'];
 const debugEnabled = /^(1|true|yes)$/i.test(process.env.DEBUG || '');
 const imageDownloadConcurrency = 6;
 const thumbnailWidth = 320;
@@ -1030,14 +1032,14 @@ const server = http.createServer(async (request, response) => {
 
   if (requestUrl.pathname.startsWith('/fonts/')) {
     const filename = path.basename(requestUrl.pathname);
-    if (!localFonts.some((font) => font.filename === filename)) {
+    if (!localFonts.some((font) => font.filename === filename) && !bundledFonts.includes(filename)) {
       response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end('Font nicht gefunden');
       return;
     }
 
     response.writeHead(200, {
-      'Content-Type': 'font/ttf',
+      'Content-Type': filename.endsWith('.woff2') ? 'font/woff2' : 'font/ttf',
       'Cache-Control': 'public, max-age=31536000, immutable',
     });
     fs.createReadStream(path.join(fontDirectory, filename)).pipe(response);
