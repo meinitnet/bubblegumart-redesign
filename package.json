@@ -3,7 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "sync-all": "node server.js --sync-all"
   },
   "dependencies": {
     "esbuild": "^0.28.2",

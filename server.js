@@ -1117,7 +1117,18 @@ async function startServer() {
   });
 }
 
-if (process.argv.includes('--rebuild-thumbnails')) {
+if (process.argv.includes('--sync-all')) {
+  fs.mkdirSync(mediaDirectory, { recursive: true });
+  refreshInstagramMedia(true)
+    .then((media) => {
+      const videos = media.filter((item) => hasStoredVideo(item.videoUrl)).length;
+      console.log(`Sync abgeschlossen: ${media.length} Medien, ${videos} Videos lokal in ${mediaDirectory}`);
+    })
+    .catch((error) => {
+      console.error(`Sync fehlgeschlagen: ${error.message}`);
+      process.exitCode = 1;
+    });
+} else if (process.argv.includes('--rebuild-thumbnails')) {
   rebuildAllThumbnails()
     .catch((error) => {
       console.error(`Vorschauen konnten nicht neu erstellt werden: ${error.message}`);
