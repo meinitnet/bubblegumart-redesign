@@ -123,7 +123,8 @@ function renderSubpage(pathname, ctx) {
           name: item.altText || 'Tattoo von Tschiggys Bubblegum Art',
           caption: item.altText || undefined,
           uploadDate: item.timestamp || undefined,
-          creator: { '@id': `${siteUrl}/#studio` },
+          creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
+          copyrightNotice: '© Daniela Tschiggy Lindner',
           creditText: 'Tschiggys Bubblegum Art Tattoo',
           license: `${siteUrl}/impressum/`,
           acquireLicensePage: `${siteUrl}/kontakt/`,
@@ -153,7 +154,7 @@ function renderSubpage(pathname, ctx) {
         thumbnailUrl: `${siteUrl}${item.thumbnailUrl || item.imageUrl}`,
         contentUrl: `${siteUrl}${item.videoUrl}`,
         uploadDate: item.timestamp || undefined,
-        creator: { '@id': `${siteUrl}/#studio` },
+        creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
       });
     });
   } else {
@@ -237,6 +238,10 @@ function renderSubpage(pathname, ctx) {
     <p>&#169; 2026 Tschiggys Bubblegum Art Tattoo · Eimsbüttler Chaussee 18, 20259 Hamburg</p>
     <p><a href="/">Start</a> · <a href="/styles/">Styles</a> · <a href="/portfolio/">Portfolio</a> · <a href="/kontakt/">Kontakt</a> · <a href="/impressum/">Impressum</a> · <a href="/datenschutz/">Datenschutz</a></p>
   </footer>
+  ${page.key === 'gallery' ? `<div class="bw3-lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Bildansicht" aria-hidden="true">
+    <button type="button" class="bw3-lightbox-close" id="lightboxClose" aria-label="Schließen">&#215;</button>
+    <img id="lightboxImg" alt="">
+  </div>` : ''}
 </div>
 <script>
 (function(){
@@ -265,6 +270,23 @@ ${page.key === 'gallery' ? `(function(){
     nav.appendChild(btn('\\u2192',current+1,{disabled:current===pages}));
   }
   render();
+  var lb=document.getElementById('lightbox'),lbImg=document.getElementById('lightboxImg'),lbClose=document.getElementById('lightboxClose'),opener=null;
+  function closeLb(){lb.classList.remove('active');lb.setAttribute('aria-hidden','true');lbImg.removeAttribute('src');if(opener)opener.focus();}
+  grid.addEventListener('click',function(ev){
+    var a=ev.target.closest&&ev.target.closest('.bw3-gallery-item');
+    if(!a||ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.button)return;
+    ev.preventDefault();
+    var img=a.querySelector('img');
+    opener=a;
+    lbImg.src=a.getAttribute('href');
+    lbImg.alt=img?img.alt:'';
+    lb.classList.add('active');
+    lb.setAttribute('aria-hidden','false');
+    lbClose.focus();
+  });
+  lb.addEventListener('click',closeLb);
+  lbClose.addEventListener('click',function(ev){ev.stopPropagation();closeLb();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&lb.classList.contains('active'))closeLb();});
 })();` : ''}
 </script>
 </body>

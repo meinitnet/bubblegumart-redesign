@@ -878,7 +878,8 @@ function renderHomepage(mediaSource) {
     name: item.altText,
     caption: item.altText,
     uploadDate: item.timestamp || undefined,
-    creator: { '@id': `${siteUrl}/#studio` },
+    creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
+    copyrightNotice: '© Daniela Tschiggy Lindner',
     creditText: 'Tschiggys Bubblegum Art Tattoo',
     license: absoluteUrl('/impressum/'),
     acquireLicensePage: absoluteUrl('/kontakt/'),
@@ -900,7 +901,12 @@ function renderHomepage(mediaSource) {
         '@id': `${siteUrl}/#webpage`,
         url: `${siteUrl}/`,
         isPartOf: { '@id': `${siteUrl}/#website` },
-        primaryImageOfPage: { '@type': 'ImageObject', url: logoImage },
+        primaryImageOfPage: {
+          '@type': 'ImageObject',
+          url: logoImage,
+          creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
+          copyrightNotice: '© Daniela Tschiggy Lindner',
+        },
         about: { '@id': `${siteUrl}/#studio` },
         hasPart: [
           { '@type': 'WebPageElement', name: 'Instagram', url: `${siteUrl}/#instagram` },
