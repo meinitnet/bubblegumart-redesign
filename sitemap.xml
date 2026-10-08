@@ -2,8 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://bubblegumart.de/</loc>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://bubblegumart.de/videos/</loc>
   </url>
   <url>
     <loc>https://bubblegumart.de/impressum/</loc>
@@ -12,4 +15,3 @@
     <loc>https://bubblegumart.de/datenschutz/</loc>
   </url>
 </urlset>
-

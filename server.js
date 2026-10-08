@@ -642,7 +642,7 @@ function createSitemap() {
   <url>
     <loc>${escapeXml(`${siteUrl}/`)}</loc>
     <lastmod>${lastmods['/']}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>${imageEntries ? `\n${imageEntries}` : ''}
   </url>
 ${legalEntries}
@@ -912,13 +912,14 @@ function renderHomepage(mediaSource) {
           { '@type': 'WebPageElement', name: 'Instagram', url: `${siteUrl}/#instagram` },
           { '@type': 'WebPageElement', name: 'Tattoo Styles', url: `${siteUrl}/styles/` },
           { '@type': 'WebPageElement', name: 'Portfolio', url: `${siteUrl}/portfolio/` },
+          { '@type': 'WebPageElement', name: 'Videos', url: `${siteUrl}/videos/` },
           { '@type': 'WebPageElement', name: 'Kontakt', url: `${siteUrl}/kontakt/` },
         ],
       },
       {
         '@type': 'SiteNavigationElement',
-        name: ['Instagram', 'Styles', 'Portfolio', 'Kontakt', 'Impressum', 'Datenschutz'],
-        url: ['/#instagram', '/styles/', '/portfolio/', '/kontakt/', '/impressum/', '/datenschutz/'].map(absoluteUrl),
+        name: ['Instagram', 'Styles', 'Portfolio', 'Videos', 'Kontakt', 'Impressum', 'Datenschutz'],
+        url: ['/#instagram', '/styles/', '/portfolio/', '/videos/', '/kontakt/', '/impressum/', '/datenschutz/'].map(absoluteUrl),
       },
       {
         '@type': 'TattooParlor',
