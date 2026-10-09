@@ -10,6 +10,7 @@ const esbuild = require('esbuild');
 loadEnvironment();
 
 const port = Number(process.env.PORT || 3000);
+const host = process.env.HOST || '127.0.0.1';
 const siteUrl = (process.env.SITE_URL || 'https://bubblegumart.de').replace(/\/$/, '');
 const legacyRedirects = new Map([
   ['/gallery', '/portfolio/'],
@@ -46,6 +47,9 @@ const legalCanonicalRedirects = new Map([
   ['/styles', '/styles/'],
   ['/portfolio', '/portfolio/'],
   ['/kontakt', '/kontakt/'],
+  ['/videos', '/videos/'],
+  ['/reels', '/videos/'],
+  ['/reels/', '/videos/'],
   ['/impressum', '/impressum/'],
   ['/datenschutz', '/datenschutz/'],
 ]);
@@ -69,6 +73,7 @@ const bundledFonts = ['lobster-400-latin.woff2'];
 const debugEnabled = /^(1|true|yes)$/i.test(process.env.DEBUG || '');
 const imageDownloadConcurrency = 6;
 const thumbnailWidth = 320;
+const maxImageBytes = 10 * 1024 * 1024;
 const maxVideoBytes = 150 * 1024 * 1024;
 let mediaCache = { value: readStoredMedia(), expiresAt: 0 };
 let mediaRefreshPromise = null;
@@ -300,16 +305,16 @@ async function downloadProfileAvatar(remoteUrl, previousProfile) {
     return previousProfile.avatarUrl;
   }
 
-  const response = await fetch(remoteUrl);
+  const response = await fetch(remoteUrl, { signal: AbortSignal.timeout(30000) });
   if (!response.ok) {
     throw new Error(`Instagram-Profilbild konnte nicht geladen werden (${response.status}).`);
   }
 
-  const extension = imageExtension(response.headers.get('content-type'));
+  const { image, extension } = await readImageResponse(response, 'Instagram-Profilbild');
   const filename = `profile-avatar${extension}`;
   const targetPath = path.join(mediaDirectory, filename);
   const temporaryPath = `${targetPath}.tmp`;
-  fs.writeFileSync(temporaryPath, Buffer.from(await response.arrayBuffer()));
+  fs.writeFileSync(temporaryPath, image);
 
   for (const entry of fs.readdirSync(mediaDirectory)) {
     if (/^profile-avatar\.(jpg|jpeg|png|webp)$/i.test(entry) && entry !== filename) {
@@ -397,9 +402,25 @@ async function getInstagramProfile() {
   }
 }
 
-function imageExtension(contentType) {
-  const extensions = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
-  return extensions[contentType?.split(';')[0].toLowerCase()] || '.jpg';
+async function readImageResponse(response, label) {
+  const contentLength = Number(response.headers.get('content-length'));
+  if (Number.isFinite(contentLength) && contentLength > maxImageBytes) {
+    throw new Error(`${label} ist zu gross.`);
+  }
+
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body) {
+    size += chunk.length;
+    if (size > maxImageBytes) throw new Error(`${label} ist zu gross.`);
+    chunks.push(chunk);
+  }
+
+  const image = Buffer.concat(chunks, size);
+  const metadata = await sharp(image).metadata();
+  const extensions = { jpeg: '.jpg', png: '.png', webp: '.webp' };
+  if (!extensions[metadata.format]) throw new Error(`${label} hat ein ungueltiges Bildformat.`);
+  return { image, extension: extensions[metadata.format] };
 }
 
 function captionSlug(caption) {
@@ -463,12 +484,12 @@ async function storeImage(id, remoteUrl, item) {
     return `/instagram-media/${fs.existsSync(path.join(mediaDirectory, filename)) ? filename : existingFile.name}`;
   }
 
-  const response = await fetch(remoteUrl);
+  const response = await fetch(remoteUrl, { signal: AbortSignal.timeout(30000) });
   debugLog(`Bild ${id}: Download ${response.status} ${response.statusText}`);
   if (!response.ok) throw new Error(`Bild ${id} konnte nicht gespeichert werden.`);
 
-  const filename = `${mediaSlug(item)}-${id}${imageExtension(response.headers.get('content-type'))}`;
-  const image = Buffer.from(await response.arrayBuffer());
+  const { image, extension } = await readImageResponse(response, `Bild ${id}`);
+  const filename = `${mediaSlug(item)}-${id}${extension}`;
   fs.writeFileSync(path.join(mediaDirectory, filename), image);
   debugLog(`Bild ${id}: gespeichert als ${filename} (${image.length} Bytes)`);
   return `/instagram-media/${filename}`;
@@ -614,7 +635,7 @@ function escapeXml(value) {
 function createSitemap() {
   const media = mediaCache.value || readStoredMedia() || [];
   const imageEntries = media
-    .filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
+    .filter((item) => item.isTattooPortfolio && item.imageUrl?.startsWith('/instagram-media/'))
     .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${item.altText ? `\n      <image:title>${escapeXml(item.altText)}</image:title>` : ''}\n    </image:image>`)
     .join('\n');
   const videoEntries = media
@@ -634,7 +655,7 @@ function createSitemap() {
   };
   const lastmodFor = (pathname) => lastmods[pathname] || fileDate(legalPages.get(pathname) || 'subpages.js');
   const legalEntries = [...Object.keys(subpages), ...legalPages.keys()]
-    .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n    <lastmod>${lastmodFor(pathname)}</lastmod>${pathname === '/videos/' && videoEntries ? `\n${videoEntries}` : ''}\n  </url>`)
+    .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n    <lastmod>${lastmodFor(pathname)}</lastmod>${pathname === '/portfolio/' && imageEntries ? `\n${imageEntries}` : ''}${pathname === '/videos/' && videoEntries ? `\n${videoEntries}` : ''}\n  </url>`)
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -643,7 +664,7 @@ function createSitemap() {
     <loc>${escapeXml(`${siteUrl}/`)}</loc>
     <lastmod>${lastmods['/']}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>1.0</priority>${imageEntries ? `\n${imageEntries}` : ''}
+    <priority>1.0</priority>
   </url>
 ${legalEntries}
 </urlset>
@@ -878,11 +899,9 @@ function renderHomepage(mediaSource) {
     name: item.altText,
     caption: item.altText,
     uploadDate: item.timestamp || undefined,
-    creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
-    copyrightNotice: '© Daniela Tschiggy Lindner',
+    creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
+    copyrightNotice: '© Tschiggy | Bubblegum art Tattoo Hamburg',
     creditText: 'Tschiggys Bubblegum Art Tattoo',
-    license: absoluteUrl('/impressum/'),
-    acquireLicensePage: absoluteUrl('/kontakt/'),
   }));
 
   const graph = {
@@ -904,8 +923,8 @@ function renderHomepage(mediaSource) {
         primaryImageOfPage: {
           '@type': 'ImageObject',
           url: logoImage,
-          creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
-          copyrightNotice: '© Daniela Tschiggy Lindner',
+          creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
+          copyrightNotice: '© Tschiggy | Bubblegum art Tattoo Hamburg',
         },
         about: { '@id': `${siteUrl}/#studio` },
         hasPart: [
@@ -965,7 +984,13 @@ function renderHomepage(mediaSource) {
 
 const server = http.createServer(async (request, response) => {
   const startedAt = Date.now();
-  const requestUrl = new URL(request.url, `http://${request.headers.host}`);
+  let requestUrl;
+  try {
+    requestUrl = new URL(request.url, 'http://localhost');
+  } catch {
+    sendText(request, response, 'text/plain; charset=utf-8', 'Ungueltige Anfrage.', 'no-store', 400);
+    return;
+  }
   const normalizedPath = requestUrl.pathname.length > 1 ? requestUrl.pathname.replace(/\/+$/, '') : requestUrl.pathname;
   debugLog(`Request: ${request.method} ${requestUrl.pathname}${requestUrl.search}`);
 
@@ -1011,7 +1036,7 @@ const server = http.createServer(async (request, response) => {
       sendText(request, response, 'text/html; charset=utf-8', html, 'public, max-age=0, must-revalidate');
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
-      sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
+      sendText(request, response, 'text/plain; charset=utf-8', 'Der Dienst ist voruebergehend nicht verfuegbar.', 'no-store', error.statusCode || 500);
     }
     return;
   }
@@ -1032,7 +1057,7 @@ const server = http.createServer(async (request, response) => {
       debugLog(`Response: 200 nach ${Date.now() - startedAt} ms`);
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
-      sendJson(request, response, error.statusCode || 500, { error: error.message || 'Serverfehler' });
+      sendJson(request, response, error.statusCode || 500, { error: 'Der Dienst ist voruebergehend nicht verfuegbar.' });
     }
     return;
   }
@@ -1059,7 +1084,7 @@ const server = http.createServer(async (request, response) => {
       debugLog(`Response: 200 nach ${Date.now() - startedAt} ms`);
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
-      sendJson(request, response, error.statusCode || 500, { error: error.message || 'Serverfehler' });
+      sendJson(request, response, error.statusCode || 500, { error: 'Der Dienst ist voruebergehend nicht verfuegbar.' });
     }
     return;
   }
@@ -1070,7 +1095,7 @@ const server = http.createServer(async (request, response) => {
       sendText(request, response, 'application/xml; charset=utf-8', createSitemap(), 'public, max-age=3600');
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
-      sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
+      sendText(request, response, 'text/plain; charset=utf-8', 'Der Dienst ist voruebergehend nicht verfuegbar.', 'no-store', error.statusCode || 500);
     }
     return;
   }
@@ -1144,7 +1169,7 @@ const server = http.createServer(async (request, response) => {
       sendText(request, response, 'text/html; charset=utf-8', renderHomepage(await getInstagramMedia()), 'public, max-age=0, must-revalidate');
     } catch (error) {
       debugLog(`Response: ${error.statusCode || 500} nach ${Date.now() - startedAt} ms: ${error.message}`);
-      sendText(request, response, 'text/plain; charset=utf-8', error.message || 'Instagram-Medien konnten nicht geladen werden.', 'no-store', error.statusCode || 500);
+      sendText(request, response, 'text/plain; charset=utf-8', 'Der Dienst ist voruebergehend nicht verfuegbar.', 'no-store', error.statusCode || 500);
     }
     return;
   }
@@ -1156,8 +1181,8 @@ const server = http.createServer(async (request, response) => {
 async function startServer() {
   fs.mkdirSync(mediaDirectory, { recursive: true });
   await downloadFonts();
-  server.listen(port, () => {
-    console.log(`Bubblegum Art läuft auf http://localhost:${port}`);
+  server.listen(port, host, () => {
+    console.log(`Bubblegum Art läuft auf http://${host}:${port}`);
     debugLog(`Konfiguration: PORT=${port}, Instagram-Zugangsdaten=${instagramUserId && instagramAccessToken ? 'gesetzt' : 'fehlen'}, LOCAL_MEDIA_ONLY=${localMediaOnly}, MEDIA_CACHE_DIR=${mediaDirectory}`);
     createStoredThumbnails().catch((error) => debugLog(`Instagram: Vorschau-Migration fehlgeschlagen: ${error.message}`));
   });

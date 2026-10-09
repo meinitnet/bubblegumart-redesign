@@ -123,11 +123,9 @@ function renderSubpage(pathname, ctx) {
           name: item.altText || 'Tattoo von Tschiggys Bubblegum Art',
           caption: item.altText || undefined,
           uploadDate: item.timestamp || undefined,
-          creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
-          copyrightNotice: '© Daniela Tschiggy Lindner',
+          creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
+          copyrightNotice: '© Tschiggy | Bubblegum art Tattoo Hamburg',
           creditText: 'Tschiggys Bubblegum Art Tattoo',
-          license: `${siteUrl}/impressum/`,
-          acquireLicensePage: `${siteUrl}/kontakt/`,
         })),
       });
     }
@@ -154,7 +152,7 @@ function renderSubpage(pathname, ctx) {
         thumbnailUrl: `${siteUrl}${item.thumbnailUrl || item.imageUrl}`,
         contentUrl: `${siteUrl}${item.videoUrl}`,
         uploadDate: item.timestamp || undefined,
-        creator: { '@type': 'Person', name: 'Daniela Tschiggy Lindner' },
+        creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
       });
     });
   } else {
