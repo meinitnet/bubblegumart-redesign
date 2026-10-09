@@ -9,6 +9,8 @@ const nav = [
   ['/kontakt/', 'Kontakt', 'nav-contact'],
 ];
 
+const galleryPageSize = 12;
+
 const styleCards = [
   { id: 'comic', accent: 'pink', color: '#ff8fa3', tag: 'Pop-Art', title: 'Comic & Cartoon Tattoos', text: 'Bunte, ausdrucksstarke Motive im typischen Comic-Stil. Von bekannten Figuren bis zu eigenen Charakteren – mit kräftigen Konturen und leuchtenden Farben.' },
   { id: 'sketch', accent: 'mint', color: '#4ecdc4', tag: 'Minimal', title: 'Sketch Tattoos', text: 'Feine Linienführung mit sketchy Details. Elegant, zeitlos und einfach bäm – ideal für filigrane Motive und lockere Zeichnungen auf der Haut.' },
@@ -76,6 +78,9 @@ const extraCss = `
 .bw3-video-text p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 12px; }
 .bw3-video-text a { color: var(--bubble-coral); font-weight: 600; }
 .bw3-page-min { min-height: 100vh; }
+.bw3-pagination a, .bw3-pagination .disabled { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elevated); color: var(--text-secondary); font: 500 13px 'Inter', sans-serif; text-decoration: none; transition: all 0.25s; }
+.bw3-pagination a:hover, .bw3-pagination a.active { border-color: var(--bubble-pink); color: var(--bubble-pink); transform: translateY(-2px); }
+.bw3-pagination .disabled { opacity: 0.4; }
 .bw3-style-card h2 { font-size: 19px; font-weight: 600; margin-bottom: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
 .bw3-contact-card h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
 `;
@@ -83,8 +88,13 @@ const extraCss = `
 function renderSubpage(pathname, ctx) {
   const page = pages[pathname];
   if (!page) return null;
-  const { siteUrl, escape, media, css } = ctx;
-  const url = `${siteUrl}${pathname}`;
+  const { siteUrl, escape, formatIsoDateTime, imageLicenseUrl, imageAcquireLicensePage, media, css } = ctx;
+  const pageNumber = ctx.pageNumber || 1;
+  const galleryUrl = (number) => `${siteUrl}${pathname}${number > 1 ? `?page=${number}` : ''}`;
+  let url = `${siteUrl}${pathname}`;
+  let title = page.title;
+  let description = page.description;
+  let headLinks = '';
   const logo = `${siteUrl}/storage/img/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp`;
   const e = escape;
 
@@ -100,13 +110,42 @@ function renderSubpage(pathname, ctx) {
       </article>`).join('')}</div>
       <p class="bw3-page-more"><a href="/portfolio/">Beispiele im Portfolio ansehen →</a> · <a href="/kontakt/">Termin anfragen →</a></p>`;
   } else if (page.key === 'gallery') {
-    const items = media.filter((item) => item.isTattooPortfolio);
+    const allItems = media.filter((item) => item.isTattooPortfolio);
+    const totalPages = Math.max(1, Math.ceil(allItems.length / galleryPageSize));
+    const items = allItems.slice((pageNumber - 1) * galleryPageSize, pageNumber * galleryPageSize);
+    if (pageNumber > 1) {
+      url = galleryUrl(pageNumber);
+      title = `${page.title} – Seite ${pageNumber}`;
+      description = `${page.description} Seite ${pageNumber} von ${totalPages}.`;
+    }
+    if (pageNumber > 1) headLinks += `\n<link rel="prev" href="${galleryUrl(pageNumber - 1)}">`;
+    if (pageNumber < totalPages) headLinks += `\n<link rel="next" href="${galleryUrl(pageNumber + 1)}">`;
+
+    const pageLink = (number, label, current) => (current
+      ? `<a href="${galleryUrl(number)}" class="active" aria-current="page">${label}</a>`
+      : `<a href="${galleryUrl(number)}">${label}</a>`);
+    const paginationItems = [];
+    if (totalPages > 1) {
+      paginationItems.push(pageNumber > 1
+        ? `<a href="${galleryUrl(pageNumber - 1)}" rel="prev" aria-label="Vorherige Seite">&larr;</a>`
+        : '<span class="disabled" aria-hidden="true">&larr;</span>');
+      for (let number = 1; number <= totalPages; number += 1) {
+        if (number === 1 || number === totalPages || Math.abs(number - pageNumber) <= 1) {
+          paginationItems.push(pageLink(number, number, number === pageNumber));
+        } else if (Math.abs(number - pageNumber) === 2) {
+          paginationItems.push('<span class="ellipsis">&hellip;</span>');
+        }
+      }
+      paginationItems.push(pageNumber < totalPages
+        ? `<a href="${galleryUrl(pageNumber + 1)}" rel="next" aria-label="Nächste Seite">&rarr;</a>`
+        : '<span class="disabled" aria-hidden="true">&rarr;</span>');
+    }
+
     body = items.length
       ? `<div class="bw3-gallery" id="galleryGrid">${items.map((item, index) => {
         const altText = e(item.altText || 'Tattoo von Tschiggys Bubblegum Art');
-        const first = index < 12;
-        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"${first ? '' : ' hidden'}><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" ${index < 4 ? 'fetchpriority="high"' : first ? '' : 'loading="lazy"'} decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
-      }).join('')}</div><div class="bw3-pagination" id="galleryPagination" aria-label="Portfolio-Seiten"></div>`
+        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" ${index < 4 ? 'fetchpriority="high"' : index < 8 ? '' : 'loading="lazy"'} decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
+      }).join('')}</div>${paginationItems.length ? `<nav class="bw3-pagination" aria-label="Portfolio-Seiten">${paginationItems.join('')}</nav>` : ''}`
       : '<p class="bw3-section-sub">Aktuelle Arbeiten findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
     body += '<p class="bw3-page-more"><a href="/styles/">Alle Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>';
     if (items.length) {
@@ -114,18 +153,20 @@ function renderSubpage(pathname, ctx) {
         '@type': 'ImageGallery',
         '@id': `${url}#gallery`,
         url,
-        name: 'Tattoo Portfolio Hamburg',
+        name: pageNumber > 1 ? `Tattoo Portfolio Hamburg – Seite ${pageNumber}` : 'Tattoo Portfolio Hamburg',
         about: { '@id': `${siteUrl}/#studio` },
-        image: items.slice(0, 24).map((item) => ({
+        image: items.map((item) => ({
           '@type': 'ImageObject',
           contentUrl: `${siteUrl}${item.imageUrl}`,
           thumbnailUrl: `${siteUrl}${item.thumbnailUrl || item.imageUrl}`,
           name: item.altText || 'Tattoo von Tschiggys Bubblegum Art',
           caption: item.altText || undefined,
-          uploadDate: item.timestamp || undefined,
+          uploadDate: formatIsoDateTime(item.timestamp),
           creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
           copyrightNotice: '© Tschiggy | Bubblegum art Tattoo Hamburg',
           creditText: 'Tschiggys Bubblegum Art Tattoo',
+          acquireLicensePage: imageAcquireLicensePage,
+          license: imageLicenseUrl,
         })),
       });
     }
@@ -151,7 +192,7 @@ function renderSubpage(pathname, ctx) {
         description: item.altText || page.description,
         thumbnailUrl: `${siteUrl}${item.thumbnailUrl || item.imageUrl}`,
         contentUrl: `${siteUrl}${item.videoUrl}`,
-        uploadDate: item.timestamp || undefined,
+        uploadDate: formatIsoDateTime(item.timestamp),
         creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
       });
     });
@@ -172,7 +213,7 @@ function renderSubpage(pathname, ctx) {
         '@id': `${url}#webpage`,
         url,
         name: page.h1,
-        description: page.description,
+        description,
         inLanguage: 'de-DE',
         isPartOf: { '@id': `${siteUrl}/#website` },
         about: { '@id': `${siteUrl}/#studio` },
@@ -199,14 +240,14 @@ function renderSubpage(pathname, ctx) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${e(page.title)}</title>
-<meta name="description" content="${e(page.description)}">
-<link rel="canonical" href="${url}">
+<title>${e(title)}</title>
+<meta name="description" content="${e(description)}">
+<link rel="canonical" href="${url}">${headLinks}
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_DE">
-<meta property="og:title" content="${e(page.title)}">
-<meta property="og:description" content="${e(page.description)}">
+<meta property="og:title" content="${e(title)}">
+<meta property="og:description" content="${e(description)}">
 <meta property="og:url" content="${url}">
 <meta property="og:image" content="${e(ogImage)}">
 <meta property="og:site_name" content="Tschiggys Bubblegum Art Tattoo">
@@ -250,24 +291,8 @@ function renderSubpage(pathname, ctx) {
   apply();
 })();
 ${page.key === 'gallery' ? `(function(){
-  var grid=document.getElementById('galleryGrid'),nav=document.getElementById('galleryPagination');
-  if(!grid||!nav)return;
-  var items=Array.prototype.slice.call(grid.children),size=12,current=1,pages=Math.ceil(items.length/size);
-  for(var i=items.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=items[i];items[i]=items[j];items[j]=t;}
-  items.forEach(function(el){grid.appendChild(el);});
-  function btn(label,page,opts){var b=document.createElement('button');b.type='button';b.textContent=label;if(opts&&opts.disabled)b.disabled=true;if(opts&&opts.active){b.className='active';b.setAttribute('aria-current','page');}b.addEventListener('click',function(){current=page;render();grid.scrollIntoView({behavior:'smooth',block:'start'});});return b;}
-  function render(){
-    items.forEach(function(el,i){el.hidden=i<(current-1)*size||i>=current*size;});
-    nav.textContent='';
-    if(pages<=1)return;
-    nav.appendChild(btn('\\u2190',current-1,{disabled:current===1}));
-    for(var p=1;p<=pages;p++){
-      if(p===1||p===pages||Math.abs(p-current)<=1){nav.appendChild(btn(String(p),p,{active:p===current}));}
-      else if(Math.abs(p-current)===2){var s=document.createElement('span');s.className='ellipsis';s.textContent='\\u2026';nav.appendChild(s);}
-    }
-    nav.appendChild(btn('\\u2192',current+1,{disabled:current===pages}));
-  }
-  render();
+  var grid=document.getElementById('galleryGrid');
+  if(!grid)return;
   var lb=document.getElementById('lightbox'),lbImg=document.getElementById('lightboxImg'),lbClose=document.getElementById('lightboxClose'),opener=null;
   function closeLb(){lb.classList.remove('active');lb.setAttribute('aria-hidden','true');lbImg.removeAttribute('src');if(opener)opener.focus();}
   grid.addEventListener('click',function(ev){
@@ -296,4 +321,4 @@ function extractCss() {
   return html.match(/<style>([\s\S]*?)<\/style>/)[1];
 }
 
-module.exports = { pages, renderSubpage, extractCss };
+module.exports = { pages, renderSubpage, extractCss, galleryPageSize };

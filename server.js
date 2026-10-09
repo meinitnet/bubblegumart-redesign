@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
-const { pages: subpages, renderSubpage, extractCss } = require('./subpages');
+const { pages: subpages, renderSubpage, extractCss, galleryPageSize } = require('./subpages');
 const crypto = require('node:crypto');
 const sharp = require('sharp');
 const esbuild = require('esbuild');
@@ -12,6 +12,8 @@ loadEnvironment();
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '127.0.0.1';
 const siteUrl = (process.env.SITE_URL || 'https://bubblegumart.de').replace(/\/$/, '');
+const imageLicenseUrl = `${siteUrl}/impressum/#bildrechte`;
+const imageAcquireLicensePage = `${siteUrl}/kontakt/`;
 const legacyRedirects = new Map([
   ['/gallery', '/portfolio/'],
   ['/tags/hamburg', '/kontakt/'],
@@ -632,16 +634,46 @@ function escapeXml(value) {
     .replace(/'/g, '&apos;');
 }
 
+function formatIsoDateTime(value) {
+  if (typeof value !== 'string') return undefined;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/);
+  if (!match) return undefined;
+
+  const [, year, month, day, hour, minute, second] = match;
+  const calendarDate = new Date(`${year}-${month}-${day}T00:00:00Z`);
+  if (
+    !Number.isFinite(Date.parse(value))
+    || calendarDate.toISOString().slice(0, 10) !== `${year}-${month}-${day}`
+    || Number(hour) > 23
+    || Number(minute) > 59
+    || Number(second) > 59
+  ) {
+    return undefined;
+  }
+
+  return new Date(value).toISOString();
+}
+
 function createSitemap() {
   const media = mediaCache.value || readStoredMedia() || [];
-  const imageEntries = media
-    .filter((item) => item.isTattooPortfolio && item.imageUrl?.startsWith('/instagram-media/'))
-    .map((item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${item.altText ? `\n      <image:title>${escapeXml(item.altText)}</image:title>` : ''}\n    </image:image>`)
+  const imageEntry = (item) => `    <image:image>\n      <image:loc>${escapeXml(`${siteUrl}${item.imageUrl}`)}</image:loc>${item.altText ? `\n      <image:title>${escapeXml(item.altText)}</image:title>` : ''}\n    </image:image>`;
+  const portfolioItems = media.filter((item) => item.isTattooPortfolio && item.imageUrl?.startsWith('/instagram-media/'));
+  const portfolioPageCount = Math.max(1, Math.ceil(portfolioItems.length / galleryPageSize));
+  const portfolioPageEntries = (number) => portfolioItems
+    .slice((number - 1) * galleryPageSize, number * galleryPageSize)
+    .map(imageEntry)
+    .join('\n');
+  const homepageImageEntries = portfolioItems
+    .slice(0, 12)
+    .map(imageEntry)
     .join('\n');
   const videoEntries = media
     .filter((item) => hasStoredVideo(item.videoUrl))
     .slice(0, 24)
-    .map((item) => `    <video:video>\n      <video:thumbnail_loc>${escapeXml(`${siteUrl}${item.thumbnailUrl || item.imageUrl}`)}</video:thumbnail_loc>\n      <video:title>${escapeXml((item.altText || 'Tattoo-Reel von Tschiggys Bubblegum Art').slice(0, 100))}</video:title>\n      <video:description>${escapeXml((item.altText || 'Tattoo-Reel aus dem Studio Bubblegum Art in Hamburg').slice(0, 2048))}</video:description>\n      <video:content_loc>${escapeXml(`${siteUrl}${item.videoUrl}`)}</video:content_loc>${item.timestamp ? `\n      <video:publication_date>${escapeXml(item.timestamp)}</video:publication_date>` : ''}\n    </video:video>`)
+    .map((item) => {
+      const publicationDate = formatIsoDateTime(item.timestamp);
+      return `    <video:video>\n      <video:thumbnail_loc>${escapeXml(`${siteUrl}${item.thumbnailUrl || item.imageUrl}`)}</video:thumbnail_loc>\n      <video:title>${escapeXml((item.altText || 'Tattoo-Reel von Tschiggys Bubblegum Art').slice(0, 100))}</video:title>\n      <video:description>${escapeXml((item.altText || 'Tattoo-Reel aus dem Studio Bubblegum Art in Hamburg').slice(0, 2048))}</video:description>\n      <video:content_loc>${escapeXml(`${siteUrl}${item.videoUrl}`)}</video:content_loc>${publicationDate ? `\n      <video:publication_date>${publicationDate}</video:publication_date>` : ''}\n    </video:video>`;
+    })
     .join('\n');
   const fileDate = (file) => fs.statSync(path.join(__dirname, file)).mtime.toISOString().slice(0, 10);
   const latestDate = (items, fallbackFile) => {
@@ -654,8 +686,20 @@ function createSitemap() {
     '/videos/': latestDate(media.filter((item) => hasStoredVideo(item.videoUrl)), 'subpages.js'),
   };
   const lastmodFor = (pathname) => lastmods[pathname] || fileDate(legalPages.get(pathname) || 'subpages.js');
+  const urlEntry = (loc, lastmod, extra) => `  <url>\n    <loc>${escapeXml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>${extra ? `\n${extra}` : ''}\n  </url>`;
   const legalEntries = [...Object.keys(subpages), ...legalPages.keys()]
-    .map((pathname) => `  <url>\n    <loc>${escapeXml(`${siteUrl}${pathname}`)}</loc>\n    <lastmod>${lastmodFor(pathname)}</lastmod>${pathname === '/portfolio/' && imageEntries ? `\n${imageEntries}` : ''}${pathname === '/videos/' && videoEntries ? `\n${videoEntries}` : ''}\n  </url>`)
+    .flatMap((pathname) => {
+      const loc = `${siteUrl}${pathname}`;
+      const lastmod = lastmodFor(pathname);
+      if (pathname === '/portfolio/') {
+        return Array.from({ length: portfolioPageCount }, (_, index) => urlEntry(
+          index ? `${loc}?page=${index + 1}` : loc,
+          lastmod,
+          portfolioPageEntries(index + 1),
+        ));
+      }
+      return [urlEntry(loc, lastmod, pathname === '/videos/' ? videoEntries : '')];
+    })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -665,6 +709,7 @@ function createSitemap() {
     <lastmod>${lastmods['/']}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+${homepageImageEntries}
   </url>
 ${legalEntries}
 </urlset>
@@ -887,21 +932,23 @@ function minifyHtml(html) {
 }
 
 function renderHomepage(mediaSource) {
-  const media = (mediaSource || mediaCache.value || readStoredMedia() || [])
-    .filter((item) => item.imageUrl?.startsWith('/instagram-media/') && item.isTattooPortfolio)
-    .slice(0, 12);
+  const portfolioMedia = (mediaSource || mediaCache.value || readStoredMedia() || [])
+    .filter((item) => item.imageUrl?.startsWith('/instagram-media/') && item.isTattooPortfolio);
+  const media = portfolioMedia.slice(0, 12);
   const logoImage = absoluteUrl('/storage/img/0980fd88548cae3e17e0f577e559e2cfa6710bad.webp');
 
-  const imageObjects = media.map((item) => ({
+  const imageObjects = portfolioMedia.map((item) => ({
     '@type': 'ImageObject',
     contentUrl: absoluteUrl(item.imageUrl),
     thumbnailUrl: absoluteUrl(item.thumbnailUrl || item.imageUrl),
     name: item.altText,
     caption: item.altText,
-    uploadDate: item.timestamp || undefined,
+    uploadDate: formatIsoDateTime(item.timestamp),
     creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
     copyrightNotice: '© Tschiggy | Bubblegum art Tattoo Hamburg',
     creditText: 'Tschiggys Bubblegum Art Tattoo',
+    acquireLicensePage: imageAcquireLicensePage,
+    license: imageLicenseUrl,
   }));
 
   const graph = {
@@ -925,6 +972,9 @@ function renderHomepage(mediaSource) {
           url: logoImage,
           creator: { '@type': 'Organization', name: 'Tschiggy | Bubblegum art Tattoo Hamburg' },
           copyrightNotice: '© Tschiggy | Bubblegum art Tattoo Hamburg',
+          creditText: 'Tschiggys Bubblegum Art Tattoo',
+          acquireLicensePage: imageAcquireLicensePage,
+          license: imageLicenseUrl,
         },
         about: { '@id': `${siteUrl}/#studio` },
         hasPart: [
@@ -1020,7 +1070,22 @@ const server = http.createServer(async (request, response) => {
     try {
       const sourceMedia = await getInstagramMedia();
       const videoIndex = storedVideoIndex();
-      let cached = renderedSubpages.get(requestUrl.pathname);
+      let pageNumber = 1;
+      if (requestUrl.pathname === '/portfolio/') {
+        const portfolioCount = sourceMedia.filter((item) => item.isTattooPortfolio && item.imageUrl?.startsWith('/instagram-media/')).length;
+        const totalPages = Math.max(1, Math.ceil(portfolioCount / galleryPageSize));
+        const requestedPage = requestUrl.searchParams.get('page');
+        pageNumber = /^[1-9]\d{0,5}$/.test(requestedPage || '') ? Number(requestedPage) : 1;
+        const canonicalPage = Math.min(pageNumber, totalPages);
+        const canonicalSearch = canonicalPage > 1 ? `?page=${canonicalPage}` : '';
+        if (requestUrl.search !== canonicalSearch) {
+          response.writeHead(301, { Location: `/portfolio/${canonicalSearch}`, 'Cache-Control': 'no-cache' });
+          response.end();
+          return;
+        }
+      }
+      const cacheKey = `${requestUrl.pathname}#${pageNumber}`;
+      let cached = renderedSubpages.get(cacheKey);
       if (!cached || cached.sourceMedia !== sourceMedia || cached.videoIndex !== videoIndex) {
         const media = sourceMedia.filter((item) => item.imageUrl?.startsWith('/instagram-media/'))
           .map((item) => {
@@ -1028,9 +1093,19 @@ const server = http.createServer(async (request, response) => {
             const stored = videoIndex.get(item.id);
             return { ...item, videoUrl: stored ? `/instagram-media/${stored}` : undefined };
           });
-        const rendered = minifyHtml(renderSubpage(requestUrl.pathname, { siteUrl, escape: escapeXml, cleanCaption, media, css: cachedCss() }));
+        const rendered = minifyHtml(renderSubpage(requestUrl.pathname, {
+          siteUrl,
+          escape: escapeXml,
+          cleanCaption,
+          formatIsoDateTime,
+          imageLicenseUrl,
+          imageAcquireLicensePage,
+          media,
+          pageNumber,
+          css: cachedCss(),
+        }));
         cached = { sourceMedia, videoIndex, html: rendered };
-        renderedSubpages.set(requestUrl.pathname, cached);
+        renderedSubpages.set(cacheKey, cached);
       }
       const html = cached.html;
       sendText(request, response, 'text/html; charset=utf-8', html, 'public, max-age=0, must-revalidate');
