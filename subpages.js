@@ -144,7 +144,7 @@ function renderSubpage(pathname, ctx) {
     body = items.length
       ? `<div class="bw3-gallery" id="galleryGrid">${items.map((item, index) => {
         const altText = e(item.altText || 'Tattoo von Tschiggys Bubblegum Art');
-        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="${altText}" width="320" height="320" ${index < 4 ? 'fetchpriority="high"' : index < 8 ? '' : 'loading="lazy"'} decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
+        return `<a class="bw3-gallery-item" href="${e(item.imageUrl)}"><img src="${e(item.thumbnailUrl || item.imageUrl)}" alt="" width="320" height="320" ${index < 4 ? 'fetchpriority="high"' : index < 8 ? '' : 'loading="lazy"'} decoding="async"><div class="bw3-gallery-caption">${altText}</div></a>`;
       }).join('')}</div>${paginationItems.length ? `<nav class="bw3-pagination" aria-label="Portfolio-Seiten">${paginationItems.join('')}</nav>` : ''}`
       : '<p class="bw3-section-sub">Aktuelle Arbeiten findest du auf <a href="https://instagram.com/tschiggys" rel="noopener noreferrer">Instagram</a>.</p>';
     body += '<p class="bw3-page-more"><a href="/styles/">Alle Tattoo Styles →</a> · <a href="/kontakt/">Termin anfragen →</a></p>';

@@ -1023,7 +1023,7 @@ function renderHomepage(mediaSource) {
   const galleryItems = media.slice(0, 8).map((item, index) => {
     const caption = escapeXml(item.altText);
     const variant = index === 1 ? ' tall' : index === 3 ? ' wide' : '';
-    return `<a class="bw3-gallery-item${variant}" href="${escapeXml(item.imageUrl)}"><img src="${escapeXml(item.thumbnailUrl || item.imageUrl)}" alt="${caption}" width="${thumbnailWidth}" height="${thumbnailWidth}" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${caption}</div></a>`;
+    return `<a class="bw3-gallery-item${variant}" href="${escapeXml(item.imageUrl)}"><img src="${escapeXml(item.thumbnailUrl || item.imageUrl)}" alt="" width="${thumbnailWidth}" height="${thumbnailWidth}" loading="lazy" decoding="async"><div class="bw3-gallery-caption">${caption}</div></a>`;
   }).join('');
 
   const jsonLd = JSON.stringify(graph).replace(/</g, '\\u003c');

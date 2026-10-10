@@ -59,8 +59,8 @@
       --bg-elevated: #ffffff;
       --bg-hero: linear-gradient(180deg, #f3e9e3 0%, #f9e4df 40%, #f3e9e3 100%);
       --text-primary: #2d2d3a;
-      --text-secondary: #7a7a8a;
-      --text-muted: #9a9aaa;
+      --text-secondary: #5a5a6a;
+      --text-muted: #666676;
       --border: rgba(0,0,0,0.06);
       --shadow: rgba(0,0,0,0.08);
       --overlay: rgba(0,0,0,0.88);
@@ -76,10 +76,14 @@
       --bubble-lavender: #c084fc;
       --bubble-gold: #ffd93d;
       --bubble-sky: #74c0fc;
+      --text-pink: #b8284a;
+      --text-mint: #0f6e68;
+      --text-coral: #c42b2b;
+      --text-lavender: #7b35c0;
       --nav-bg: rgba(253, 251, 247, 0.88);
       --marquee-bg: #ffffff;
       --footer-bg: #ffffff;
-      --footer-text: #b0b0c0;
+      --footer-text: #666676;
       --scroll-icon: #aaa;
     }
 
@@ -89,7 +93,7 @@
       --bg-hero: linear-gradient(180deg, #1a1a2e 0%, #252540 40%, #1a1a2e 100%);
       --text-primary: #f0f0f5;
       --text-secondary: #a0a0b8;
-      --text-muted: #7a7a9a;
+      --text-muted: #9a9ab8;
       --border: rgba(255,255,255,0.08);
       --shadow: rgba(0,0,0,0.3);
       --overlay: rgba(0,0,0,0.92);
@@ -105,10 +109,14 @@
       --bubble-lavender: #b76cf7;
       --bubble-gold: #ffd43b;
       --bubble-sky: #5db8ff;
+      --text-pink: #ff6b9d;
+      --text-mint: #3dd4c5;
+      --text-coral: #ff5252;
+      --text-lavender: #b76cf7;
       --nav-bg: rgba(26, 26, 46, 0.88);
       --marquee-bg: #252540;
       --footer-bg: #252540;
-      --footer-text: #6b6b8a;
+      --footer-text: #9a9ab8;
       --scroll-icon: #6b6b8a;
     }
 
@@ -149,7 +157,7 @@
       letter-spacing: 0.5px;
     }
     .bw3-nav-logo:hover { transform: scale(1.05) rotate(-2deg); }
-    .bw3-nav-logo span { color: var(--bubble-mint); }
+    .bw3-nav-logo span { color: var(--text-mint); }
     .bw3-nav-links {
       display: flex;
       gap: 28px;
@@ -266,7 +274,7 @@
       transition: color 0.4s;
     }
     .bw3-hero h1 .highlight {
-      color: var(--bubble-mint);
+      color: var(--text-mint);
       position: relative;
       display: inline-block;
     }
@@ -323,7 +331,7 @@
     }
     .bw3-badge:hover {
       border-color: var(--bubble-pink);
-      color: var(--bubble-pink);
+      color: var(--text-pink);
       transform: translateY(-4px) rotate(-1deg);
       box-shadow: 0 8px 24px rgba(255, 143, 163, 0.12);
     }
@@ -574,7 +582,7 @@
     .bw3-pagination button:hover:not(:disabled),
     .bw3-pagination button.active {
       border-color: var(--bubble-pink);
-      color: var(--bubble-pink);
+      color: var(--text-pink);
       transform: translateY(-2px);
     }
     .bw3-pagination button:disabled {
@@ -628,7 +636,7 @@
       transform: translateY(-8px) rotate(-1deg);
       box-shadow: 0 20px 50px var(--shadow);
     }
-    .bw3-style-card h4 {
+    .bw3-style-card h3 {
       font-size: 19px;
       font-weight: 600;
       margin-bottom: 10px;
@@ -752,7 +760,7 @@
       height: 24px;
       color: var(--icon-color, var(--bubble-pink));
     }
-    .bw3-contact-card h4 {
+    .bw3-contact-card h3 {
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 6px;
@@ -861,7 +869,7 @@
   <nav class="bw3-nav">
     <a class="bw3-nav-logo" href="/" aria-label="Bubblegum Art Tattoo, Startseite">bubblegum<span>art</span></a>
     <ul class="bw3-nav-links">
-      <li><a href="#instagram" id="nav-instagram">Instagram</a></li>
+      <li><a href="#instagram" id="nav-instagram">Neueste Arbeiten</a></li>
       <li><a href="/styles/" id="nav-styles">Styles</a></li>
       <li><a href="/portfolio/" id="nav-gallery">Gallery</a></li>
       <li><a href="/videos/" id="nav-videos">Videos</a></li>
@@ -875,6 +883,7 @@
     </div>
   </nav>
 
+  <main>
   <section class="bw3-hero" id="hero">
     <canvas class="bw3-hero-canvas" id="heroCanvas"></canvas>
     <div class="bw3-hero-content">
@@ -945,23 +954,23 @@
     <p class="bw3-section-sub">Comic-, Sketch-, Newschool- und Custom-Tattoos im Tattoostudio in Hamburg. Jeder Style erzählt eine andere Geschichte.</p>
 
     <div class="bw3-styles-grid">
-      <div class="bw3-style-card" style="--accent: var(--bubble-pink); --tag-bg: rgba(255,143,163,0.12); --tag-color: #ff8fa3;">
-        <h4>Comic & Cartoon</h4>
+      <div class="bw3-style-card" style="--accent: var(--bubble-pink); --tag-bg: rgba(255,143,163,0.12); --tag-color: var(--text-pink);">
+        <h3>Comic & Cartoon</h3>
         <p>Bunte, ausdrucksstarke Motive im typischen Comic-Stil. Von Disney-Figuren bis zu eigenen Charakteren.</p>
         <span class="bw3-style-tag">Pop-Art</span>
       </div>
-      <div class="bw3-style-card" style="--accent: var(--bubble-mint); --tag-bg: rgba(78,205,196,0.12); --tag-color: #4ecdc4;">
-        <h4>Sketch</h4>
+      <div class="bw3-style-card" style="--accent: var(--bubble-mint); --tag-bg: rgba(78,205,196,0.12); --tag-color: var(--text-mint);">
+        <h3>Sketch</h3>
         <p>Feine Linienführung mit sketchy Details. Elegant, zeitlos und einfach bäm</p>
         <span class="bw3-style-tag">Minimal</span>
       </div>
-      <div class="bw3-style-card" style="--accent: var(--bubble-coral); --tag-bg: rgba(255,107,107,0.12); --tag-color: #ff6b6b;">
-        <h4>Newschool</h4>
+      <div class="bw3-style-card" style="--accent: var(--bubble-coral); --tag-bg: rgba(255,107,107,0.12); --tag-color: var(--text-coral);">
+        <h3>Newschool</h3>
         <p>Übertriebene Perspektiven, kräftige Farben und verspielte Motive – der Klassiker moderner Tattoo-Kunst.</p>
         <span class="bw3-style-tag">Bold</span>
       </div>
-      <div class="bw3-style-card" style="--accent: var(--bubble-lavender); --tag-bg: rgba(192,132,252,0.12); --tag-color: #c084fc;">
-        <h4>Custom Design</h4>
+      <div class="bw3-style-card" style="--accent: var(--bubble-lavender); --tag-bg: rgba(192,132,252,0.12); --tag-color: var(--text-lavender);">
+        <h3>Custom Design</h3>
         <p>Deine Idee, meine Interpretation. Gemeinsam entwickeln wir ein einzigartiges Motiv, das nur dir gehört.</p>
         <span class="bw3-style-tag">Unique</span>
       </div>
@@ -990,22 +999,23 @@
 
     <div class="bw3-contact-grid">
       <a class="bw3-contact-card" href="mailto:tschiggys@bubblegumart.de">
-        <div class="bw3-contact-icon" style="--icon-bg: rgba(78,205,196,0.12); --icon-color: #4ecdc4;">
+        <div class="bw3-contact-icon" style="--icon-bg: rgba(78,205,196,0.12); --icon-color: var(--text-mint);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
-        <h4>E-Mail</h4>
+        <h3>E-Mail</h3>
         <p>tschiggys@bubblegumart.de</p>
       </a>
       <a class="bw3-contact-card" href="https://instagram.com/tschiggys" target="_blank" rel="noopener noreferrer">
-        <div class="bw3-contact-icon" style="--icon-bg: rgba(192,132,252,0.12); --icon-color: #c084fc;">
+        <div class="bw3-contact-icon" style="--icon-bg: rgba(192,132,252,0.12); --icon-color: var(--text-lavender);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
         </div>
-        <h4>Instagram</h4>
+        <h3>Instagram</h3>
         <p>@tschiggys</p>
       </a>
     </div>
     <p class="bw3-more"><a href="/kontakt/">Alle Kontaktmöglichkeiten →</a></p>
   </section>
+  </main>
 
   <footer class="bw3-footer">
     <p>&#169; 2026 Tschiggys Bubblegum Art Tattoo · Eimsbüttler Chaussee 18, 20259 Hamburg</p>
@@ -1363,7 +1373,7 @@
         openLightbox(img.imageUrl, getImageAlt(img), img.videoUrl);
       });
       div.innerHTML = `
-        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="${escapeHtml(getImageAlt(img))}" loading="lazy" decoding="async">${img.videoUrl ? '<span class="bw3-play" aria-label="Reel abspielen">&#9654;</span>' : ''}
+        <img src="${escapeHtml(img.thumbnailUrl || img.imageUrl)}" alt="" loading="lazy" decoding="async">${img.videoUrl ? '<span class="bw3-play" aria-label="Reel abspielen">&#9654;</span>' : ''}
         <div class="bw3-gallery-caption">${escapeHtml(getImageAlt(img))}</div>
       `;
       galleryGrid.appendChild(div);
