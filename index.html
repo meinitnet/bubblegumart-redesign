@@ -1076,6 +1076,10 @@
   let bubbles = [];
   let mouse = { x: null, y: null };
   let scrollY = 0;
+  let animationFrameId = 0;
+  let lastFrameTime = 0;
+  let heroIsVisible = false;
+  let bubbleAnimationStarted = false;
 
   function resizeCanvas() {
     canvas.width = canvas.parentElement.offsetWidth;
@@ -1178,14 +1182,13 @@
       }
     }
 
-    draw() {
+    draw(isDarkMode) {
       const parallaxFactor = [0.15, 0.35, 0.6][this.layer];
       const drawY = this.y - scrollY * parallaxFactor;
 
       if (drawY < -this.size * 2 || drawY > canvas.height + this.size * 2) return;
 
       const { r, g, b } = this.color;
-      const isDarkMode = document.getElementById('bw3Root').hasAttribute('data-theme');
       const brightnessBoost = isDarkMode ? 1.4 : 2.4;
 
       const grad = ctx.createRadialGradient(
@@ -1278,22 +1281,49 @@
     }
   }
 
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    bubbles.forEach(b => { b.update(); b.draw(); });
-    drawPopEffects();
-    requestAnimationFrame(animate);
+  function animate(timestamp) {
+    animationFrameId = 0;
+    if (!bubbleAnimationStarted || !heroIsVisible || document.hidden) return;
+
+    if (timestamp - lastFrameTime >= 1000 / 30) {
+      lastFrameTime = timestamp;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const isDarkMode = document.getElementById('bw3Root').hasAttribute('data-theme');
+      bubbles.forEach(b => { b.update(); b.draw(isDarkMode); });
+      drawPopEffects();
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  function updateBubbleAnimation() {
+    if (bubbleAnimationStarted && heroIsVisible && !document.hidden && !animationFrameId) {
+      lastFrameTime = 0;
+      animationFrameId = requestAnimationFrame(animate);
+    }
   }
 
   function startBubbles() {
+    if (bubbleAnimationStarted) return;
+    bubbleAnimationStarted = true;
+    const isSmallScreen = window.matchMedia('(max-width: 640px)').matches;
     for (let layer = 0; layer < 3; layer++) {
-      const count = layer === 0 ? 12 : layer === 1 ? 8 : 5;
+      const count = isSmallScreen
+        ? [8, 5, 3][layer]
+        : [12, 8, 5][layer];
       for (let i = 0; i < count; i++) {
         bubbles.push(new SoapBubble(layer));
       }
     }
-    animate();
+    updateBubbleAnimation();
   }
+
+  const heroObserver = new IntersectionObserver((entries) => {
+    heroIsVisible = entries.some((entry) => entry.isIntersecting);
+    updateBubbleAnimation();
+  }, { rootMargin: '100px' });
+  heroObserver.observe(document.getElementById('hero'));
+  document.addEventListener('visibilitychange', updateBubbleAnimation);
 
   const igGrid = document.getElementById('igGrid');
   const galleryGrid = document.getElementById('galleryGrid');
