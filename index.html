@@ -462,7 +462,6 @@
       border: 3px solid var(--bubble-pink);
       padding: 3px;
       background: var(--bg-base);
-      animation: avatarPulse 2.5s ease-in-out infinite;
       transition: background 0.4s;
     }
     @keyframes avatarPulse {
@@ -524,7 +523,7 @@
       cursor: pointer;
       opacity: 0;
       transform: scale(0.85) rotate(-2deg);
-      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: opacity 0.5s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s;
       background: var(--bg-elevated);
     }
     .bw3-ig-item.visible {
@@ -608,7 +607,7 @@
       border-radius: 20px;
       border: 1px solid var(--border);
       background: var(--bg-elevated);
-      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: opacity 0.45s, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.45s, box-shadow 0.45s;
       cursor: pointer;
       position: relative;
       overflow: hidden;
@@ -678,7 +677,7 @@
       position: relative;
       opacity: 0;
       transform: translateY(30px) scale(0.95);
-      transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: opacity 0.55s, transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.55s;
       background: var(--bg-elevated);
     }
     .bw3-gallery-item.visible {
@@ -1088,12 +1087,11 @@
     { sizeMin: 40, sizeMax: 90, speedMin: 0.5, speedMax: 1.0, opacity: 0.28 },
   ];
 
-  function resizeCanvas() {
-    canvas.width = canvas.parentElement.offsetWidth;
-    canvas.height = canvas.parentElement.offsetHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+  // ResizeObserver liefert die Groesse ohne erzwungenen Reflow (offsetWidth/offsetHeight).
+  new ResizeObserver(([entry]) => {
+    canvas.width = Math.round(entry.contentRect.width);
+    canvas.height = Math.round(entry.contentRect.height);
+  }).observe(canvas.parentElement);
 
   canvas.addEventListener('pointermove', (e) => {
     const rect = canvas.getBoundingClientRect();
@@ -1566,18 +1564,21 @@
   document.querySelectorAll('.bw3-gallery-item').forEach(el => revealObserver.observe(el));
   document.querySelectorAll('.bw3-contact-card').forEach(el => revealObserver.observe(el));
 
-  loadInstagramMedia();
-  const profileObserver = new IntersectionObserver((entries) => {
-    if (entries.some((entry) => entry.isIntersecting)) {
-      profileObserver.disconnect();
-      loadInstagramProfile();
-    }
-  }, { rootMargin: '100px' });
-  profileObserver.observe(document.getElementById('instagram'));
+  // Raster erst nach dem Laden ersetzen: haelt den Hauptthread waehrend des Seitenaufbaus frei.
+  if (document.readyState === 'complete') loadInstagramMedia();
+  else window.addEventListener('load', loadInstagramMedia, { once: true });
+  // Profilwerte sind unkritisch: erst nach dem Laden und im Leerlauf holen.
+  const scheduleProfileLoad = () => ('requestIdleCallback' in window
+    ? requestIdleCallback(loadInstagramProfile, { timeout: 4000 })
+    : setTimeout(loadInstagramProfile, 2000));
+  if (document.readyState === 'complete') scheduleProfileLoad();
+  else window.addEventListener('load', scheduleProfileLoad, { once: true });
   // Nach dem ersten Paint starten, damit Überschrift und Hero zuerst gezeichnet werden.
-  requestAnimationFrame(() => setTimeout(() => {
-    startBubbles();
-  }, 0));
+  const scheduleBubbles = () => ('requestIdleCallback' in window
+    ? requestIdleCallback(startBubbles, { timeout: 3000 })
+    : setTimeout(startBubbles, 1500));
+  if (document.readyState === 'complete') scheduleBubbles();
+  else window.addEventListener('load', scheduleBubbles, { once: true });
 </script>
 
 </body>

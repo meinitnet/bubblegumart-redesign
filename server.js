@@ -78,7 +78,7 @@ const thumbnailWidth = 320;
 const maxImageBytes = 10 * 1024 * 1024;
 const maxVideoBytes = 150 * 1024 * 1024;
 const videoRetryMs = 24 * 60 * 60 * 1000;
-let mediaCache = { value: readStoredMedia(), expiresAt: 0 };
+let mediaCache = { value: null, expiresAt: 0 };
 let mediaRefreshPromise = null;
 let profileCache = { value: readStoredProfile(), expiresAt: 0 };
 let profileRefreshPromise = null;
@@ -894,7 +894,7 @@ function sendText(request, response, contentType, body, cacheControl, statusCode
   let variants = compressedBodies.get(etag);
   if (!variants) {
     if (compressedBodies.size > 50) compressedBodies.clear();
-    variants = { br: zlib.brotliCompressSync(body), gzip: zlib.gzipSync(body, { level: 9 }) };
+    variants = { br: zlib.brotliCompressSync(body, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 } }), gzip: zlib.gzipSync(body, { level: 9 }) };
     compressedBodies.set(etag, variants);
   }
 
@@ -937,7 +937,19 @@ function minifyHtml(html) {
   return result;
 }
 
+let homepageCache = { source: null, mtimeMs: 0, html: '' };
+
+// Die fertige Startseite wird wiederverwendet, solange Medienliste und index.html unveraendert sind.
 function renderHomepage(mediaSource) {
+  const source = mediaSource || mediaCache.value || readStoredMedia() || [];
+  const mtimeMs = fs.statSync(path.join(__dirname, 'index.html')).mtimeMs;
+  if (homepageCache.source !== source || homepageCache.mtimeMs !== mtimeMs) {
+    homepageCache = { source, mtimeMs, html: buildHomepage(source) };
+  }
+  return homepageCache.html;
+}
+
+function buildHomepage(mediaSource) {
   const portfolioMedia = (mediaSource || mediaCache.value || readStoredMedia() || [])
     .filter((item) => item.imageUrl?.startsWith('/instagram-media/') && item.isTattooPortfolio);
   const media = portfolioMedia.slice(0, 12);
@@ -1262,11 +1274,23 @@ const server = http.createServer(async (request, response) => {
 
 async function startServer() {
   fs.mkdirSync(mediaDirectory, { recursive: true });
+  // Erst hier laden: readStoredMedia braucht Konstanten, die nach dem Modulanfang definiert werden.
+  mediaCache = { value: readStoredMedia(), expiresAt: 0 };
   await downloadFonts();
   server.listen(port, host, () => {
     console.log(`Bubblegum Art läuft auf http://${host}:${port}`);
     debugLog(`Konfiguration: PORT=${port}, Instagram-Zugangsdaten=${instagramUserId && instagramAccessToken ? 'gesetzt' : 'fehlen'}, LOCAL_MEDIA_ONLY=${localMediaOnly}, MEDIA_CACHE_DIR=${mediaDirectory}`);
-    createStoredThumbnails().catch((error) => debugLog(`Instagram: Vorschau-Migration fehlgeschlagen: ${error.message}`));
+    const warmHomepage = () => {
+      try {
+        if (mediaCache.value) renderHomepage(mediaCache.value);
+      } catch (error) {
+        debugLog(`Startseite: Vorwaermen fehlgeschlagen: ${error.message}`);
+      }
+    };
+    warmHomepage();
+    createStoredThumbnails()
+      .catch((error) => debugLog(`Instagram: Vorschau-Migration fehlgeschlagen: ${error.message}`))
+      .finally(warmHomepage);
   });
 }
 
