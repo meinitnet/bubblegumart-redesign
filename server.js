@@ -77,6 +77,7 @@ const imageDownloadConcurrency = 6;
 const thumbnailWidth = 320;
 const maxImageBytes = 10 * 1024 * 1024;
 const maxVideoBytes = 150 * 1024 * 1024;
+const videoRetryMs = 24 * 60 * 60 * 1000;
 let mediaCache = { value: readStoredMedia(), expiresAt: 0 };
 let mediaRefreshPromise = null;
 let profileCache = { value: readStoredProfile(), expiresAt: 0 };
@@ -539,11 +540,13 @@ async function storeVideo(id, remoteUrl, item) {
 async function addVideo(item, remoteVideoUrl) {
   if (item.mediaType !== 'VIDEO' || hasStoredVideo(item.videoUrl)) return item;
   if (!remoteVideoUrl) return item;
+  // Fehlgeschlagene Videos nicht bei jedem Refresh erneut herunterladen.
+  if (item.videoFailedAt && Date.now() - item.videoFailedAt < videoRetryMs) return item;
   try {
-    return { ...item, videoUrl: await storeVideo(item.id, remoteVideoUrl, item) };
+    return { ...item, videoUrl: await storeVideo(item.id, remoteVideoUrl, item), videoFailedAt: undefined };
   } catch (error) {
     debugLog(`Video ${item.id}: ${error.message}`);
-    return item;
+    return { ...item, videoFailedAt: Date.now() };
   }
 }
 
@@ -775,6 +778,7 @@ async function refreshInstagramMedia(loadAllPages) {
   url.searchParams.set('fields', fields);
   url.searchParams.set('access_token', instagramAccessToken);
 
+  const refreshStartedAt = Date.now();
   debugLog(`Instagram: ${loadAllPages ? 'vollstaendiger' : 'inkrementeller'} Refresh gestartet`);
   const fetchedMedia = await fetchInstagramMediaPages(url, loadAllPages ? Infinity : 1);
   const remoteMedia = fetchedMedia
@@ -799,7 +803,9 @@ async function refreshInstagramMedia(loadAllPages) {
     const { remoteVideoUrl, ...publicItem } = item;
     const existingItem = existingMedia.get(item.id);
     if (existingItem && hasStoredImage(existingItem.imageUrl)) {
-      return addVideo(await addThumbnail({ ...existingItem, ...publicItem, imageUrl: existingItem.imageUrl }), remoteVideoUrl);
+      const knownItem = { ...existingItem, ...publicItem, imageUrl: existingItem.imageUrl };
+      const readyItem = hasStoredImage(knownItem.thumbnailUrl) ? knownItem : await addThumbnail(knownItem);
+      return addVideo(readyItem, remoteVideoUrl);
     }
     downloadedCount += 1;
     try {
@@ -816,7 +822,7 @@ async function refreshInstagramMedia(loadAllPages) {
   const media = deduplicateMedia([...refreshedMedia, ...olderMedia].map(enrichMediaItem));
   mediaCache = { value: media, expiresAt: Date.now() + cacheLifetimeMs };
   persistMedia(media);
-  debugLog(`Instagram: Refresh abgeschlossen (${downloadedCount} neue Downloads, ${media.length} lokale Medien)`);
+  console.log(`Instagram: ${loadAllPages ? 'vollstaendiger' : 'inkrementeller'} Refresh in ${Date.now() - refreshStartedAt} ms (${downloadedCount} neue Downloads, ${media.length} lokale Medien)`);
   return media;
 }
 
@@ -994,6 +1000,7 @@ function renderHomepage(mediaSource) {
         '@type': 'TattooParlor',
         '@id': `${siteUrl}/#studio`,
         name: 'Tschiggys Bubblegum Art Tattoo',
+        description: 'Frauengeführtes, genderinklusives Tattoostudio in Hamburg-Eimsbüttel für individuelle Tattoos in respektvoller Atmosphäre.',
         url: `${siteUrl}/`,
         email: 'tschiggys@bubblegumart.de',
         image: [logoImage, ...media.slice(0, 6).map((item) => absoluteUrl(item.imageUrl))],

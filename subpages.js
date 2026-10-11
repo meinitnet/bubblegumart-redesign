@@ -45,10 +45,10 @@ const pages = {
   },
   '/kontakt/': {
     key: 'contact',
-    title: 'Kontakt & Termin | Tattoostudio Bubblegum Art Hamburg',
-    description: 'Termin für dein Tattoo in Hamburg anfragen: Tschiggys Bubblegum Art, Eimsbüttler Chaussee 18, 20259 Hamburg. Per E-Mail oder Instagram.',
+    title: 'Kontakt & Termin | Frauengeführtes Tattoostudio Hamburg',
+    description: 'Frauengeführtes, genderinklusives Tattoostudio in Hamburg-Eimsbüttel. Für Frauen auf der Suche nach einem Tattoo-Studio in Hamburg und alle, die respektvolle Beratung schätzen.',
     h1: 'Kontakt & Termin',
-    intro: 'Lass uns über dein nächstes Tattoo sprechen.',
+    intro: 'Tschiggy führt ihr Studio in Hamburg-Eimsbüttel mit einem respektvollen, genderinklusiven Ansatz. Du suchst als Frau ein Tattoo-Studio in Hamburg oder wünschst dir beim Tätowieren ein sicheres, respektvolles Umfeld? Bei Tschiggy sind alle willkommen – unabhängig von Geschlecht oder Erfahrung.',
     crumb: 'Kontakt',
   },
 };
