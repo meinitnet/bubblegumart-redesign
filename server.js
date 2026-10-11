@@ -1172,6 +1172,23 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (requestUrl.pathname.startsWith('/storage/img/')) {
+    const filename = path.basename(requestUrl.pathname);
+    const imagePath = path.join(__dirname, 'storage', 'img', filename);
+    if (!/\.webp$/.test(filename) || !fs.existsSync(imagePath)) {
+      response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      response.end('Bild nicht gefunden');
+      return;
+    }
+
+    response.writeHead(200, {
+      'Content-Type': 'image/webp',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    });
+    fs.createReadStream(imagePath).pipe(response);
+    return;
+  }
+
   if (requestUrl.pathname === '/api/instagram-profile') {
     try {
       sendJson(request, response, 200, await getInstagramProfile());
