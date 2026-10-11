@@ -1012,7 +1012,7 @@ function buildHomepage(mediaSource) {
         '@type': 'TattooParlor',
         '@id': `${siteUrl}/#studio`,
         name: 'Tschiggys Bubblegum Art Tattoo',
-        description: 'Frauengeführtes, genderinklusives Tattoostudio in Hamburg-Eimsbüttel für individuelle Tattoos in respektvoller Atmosphäre.',
+        description: 'Frauengeführtes Tattoostudio und Safe Space in Hamburg-Eimsbüttel für individuelle Tattoos in respektvoller Atmosphäre.',
         url: `${siteUrl}/`,
         email: 'tschiggys@bubblegumart.de',
         image: [logoImage, ...media.slice(0, 6).map((item) => absoluteUrl(item.imageUrl))],

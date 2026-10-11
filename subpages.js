@@ -46,9 +46,9 @@ const pages = {
   '/kontakt/': {
     key: 'contact',
     title: 'Kontakt & Termin | Frauengeführtes Tattoostudio Hamburg',
-    description: 'Frauengeführtes, genderinklusives Tattoostudio in Hamburg-Eimsbüttel. Für Frauen auf der Suche nach einem Tattoo-Studio in Hamburg und alle, die respektvolle Beratung schätzen.',
+    description: 'Frauengeführtes Tattoostudio und Safe Space in Hamburg-Eimsbüttel. Für Frauen auf der Suche nach einem Tattoo-Studio in Hamburg und alle, die respektvolle Beratung schätzen.',
     h1: 'Kontakt & Termin',
-    intro: 'Tschiggy führt ihr Studio in Hamburg-Eimsbüttel mit einem respektvollen, genderinklusiven Ansatz. Du suchst als Frau ein Tattoo-Studio in Hamburg oder wünschst dir beim Tätowieren ein sicheres, respektvolles Umfeld? Bei Tschiggy sind alle willkommen – unabhängig von Geschlecht oder Erfahrung.',
+    intro: 'Tschiggy führt ihr Studio in Hamburg-Eimsbüttel mit einem respektvollen Ansatz – als Safe Space für alle. Du suchst als Frau ein Tattoo-Studio in Hamburg oder wünschst dir beim Tätowieren ein sicheres, respektvolles Umfeld? Bei Tschiggy sind alle willkommen – ganz gleich, wer du bist oder wie viel Erfahrung du mitbringst.',
     crumb: 'Kontakt',
   },
 };
