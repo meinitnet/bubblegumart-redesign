@@ -1080,6 +1080,7 @@
   let lastFrameTime = 0;
   let heroIsVisible = false;
   let bubbleAnimationStarted = false;
+  let motionScale = 1;
   const parallaxFactors = [0.15, 0.35, 0.6];
   const bubbleLayerSettings = [
     { sizeMin: 15, sizeMax: 35, speedMin: 0.15, speedMax: 0.35, opacity: 0.12 },
@@ -1158,11 +1159,11 @@
       const parallaxFactor = parallaxFactors[this.layer];
       const scrollOffset = scrollY * parallaxFactor;
 
-      this.y += this.speedY;
-      this.wobble += this.wobbleSpeed;
-      this.pulse += this.pulseSpeed;
+      this.y += this.speedY * motionScale;
+      this.wobble += this.wobbleSpeed * motionScale;
+      this.pulse += this.pulseSpeed * motionScale;
 
-      this.x += this.speedX + Math.sin(this.wobble) * this.wobbleAmp;
+      this.x += (this.speedX + Math.sin(this.wobble) * this.wobbleAmp) * motionScale;
       this.size = this.baseSize + Math.sin(this.pulse) * (this.baseSize * 0.08);
 
       if (mouse.x !== null) {
@@ -1300,12 +1301,8 @@
         bubbles.push(new SoapBubble(layer));
       }
     }
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      // Bei reduzierter Bewegung bleiben die Blasen als ruhendes Bild sichtbar.
-      const isDarkMode = document.getElementById('bw3Root').hasAttribute('data-theme');
-      bubbles.forEach((bubble) => bubble.draw(isDarkMode));
-      return;
-    }
+    // Bei reduzierter Bewegung driften die Blasen nur ganz langsam.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) motionScale = 0.3;
     updateBubbleAnimation();
   }
 
