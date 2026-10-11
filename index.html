@@ -1089,8 +1089,9 @@
 
   // ResizeObserver liefert die Groesse ohne erzwungenen Reflow (offsetWidth/offsetHeight).
   new ResizeObserver(([entry]) => {
-    canvas.width = Math.round(entry.contentRect.width);
-    canvas.height = Math.round(entry.contentRect.height);
+    const box = entry.borderBoxSize && entry.borderBoxSize[0];
+    canvas.width = Math.round(box ? box.inlineSize : entry.contentRect.width);
+    canvas.height = Math.round(box ? box.blockSize : entry.contentRect.height);
   }).observe(canvas.parentElement);
 
   canvas.addEventListener('pointermove', (e) => {
@@ -1290,7 +1291,6 @@
   function startBubbles() {
     if (bubbleAnimationStarted) return;
     bubbleAnimationStarted = true;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const isSmallScreen = window.matchMedia('(max-width: 640px)').matches;
     for (let layer = 0; layer < 3; layer++) {
       const count = isSmallScreen
@@ -1299,6 +1299,12 @@
       for (let i = 0; i < count; i++) {
         bubbles.push(new SoapBubble(layer));
       }
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // Bei reduzierter Bewegung bleiben die Blasen als ruhendes Bild sichtbar.
+      const isDarkMode = document.getElementById('bw3Root').hasAttribute('data-theme');
+      bubbles.forEach((bubble) => bubble.draw(isDarkMode));
+      return;
     }
     updateBubbleAnimation();
   }
